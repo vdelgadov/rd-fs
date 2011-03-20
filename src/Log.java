@@ -2,7 +2,6 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -30,6 +29,7 @@ public class Log {
 	private Priority p; 
 	private File f;
 	private FileWriter fstream;
+	private BufferedWriter out;
 	
 	private static Log l;
 	
@@ -41,6 +41,7 @@ public class Log {
 		try
 		{
 			this.fstream = new FileWriter(this.f, true);
+			this.out = new BufferedWriter(l.fstream);
 		}
 		catch(IOException ioe)
 		{
@@ -76,16 +77,15 @@ public class Log {
 		}
 		try
 		{
-			BufferedWriter out = new BufferedWriter(l.fstream);
+			
 			SimpleDateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-			out.write(df.format(new Date())+ "  ");
+			l.out.write(df.format(new Date())+ "  ");
 			if (o != null)
 			{
-				out.write(o.toString()+":");
+				l.out.write(o.toString()+":");
 			}
-		    out.write(message+"\n\r");
+		    l.out.write(message+"\n\r");
 		    //Close the output stream
-		    out.close();
 	    }
 		catch (Exception e)
 		{//Catch exception if any
