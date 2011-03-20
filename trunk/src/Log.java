@@ -20,7 +20,7 @@ public class Log {
 		
 		public boolean isHigherPriorityThan(Priority p)
 		{
-			return priority < p.priority;
+			return priority <= p.priority;
 		}
 	}
 	
@@ -28,7 +28,9 @@ public class Log {
 	private File f;
 	private FileWriter fstream;
 	
-	public Log(Priority p)
+	private static Log l;
+	
+	private Log(Priority p)
 	{
 		this.p = p;
 		this.f = new File(Log.LOG_FILENAME);
@@ -43,23 +45,40 @@ public class Log {
 		}
 	}
 	
-	public void me(Object o, String message)
+	private static Log getInstance(Priority p)
+	{
+		if (l == null)
+		{
+			l = new Log(p);
+		}
+		return l;
+	}
+	
+	public static void init(Priority p)
+	{
+		Log.getInstance(p);
+	}
+	
+	public static void me(Object o, String message)
 	{
 		me(o, message, Priority.DEBUG);
 	}
 	
-	public void me(Object o, String message, Priority p)
+	public static void me(Object o, String message, Priority p)
 	{
-		if (!p.isHigherPriorityThan(this.p))
+		if (!p.isHigherPriorityThan(l.p))
 		{
 			// Nothing should be saved, the priority isn't high enough.
 			return;
 		}
 		try
 		{
-			BufferedWriter out = new BufferedWriter(fstream);
-			out.write(o.toString()+":");
-		    out.write(message+"\r");
+			BufferedWriter out = new BufferedWriter(l.fstream);
+			if (o != null)
+			{
+				out.write(o.toString()+":");
+			}
+		    out.write(message+"\n\r");
 		    //Close the output stream
 		    out.close();
 	    }
