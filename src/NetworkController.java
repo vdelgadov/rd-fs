@@ -2,7 +2,7 @@ import java.net.DatagramPacket;
 
 public class NetworkController {
 
-	FileSystemController FSC = new FileSystemController();
+	FileSystemController FSC = FileSystemController.getInstance("");
 	DirectoryController DC = new DirectoryController();
 	
 	static NetworkController nc;
@@ -12,7 +12,6 @@ public class NetworkController {
 	public boolean runListener = true;  //dont modify!!!!!!
 	
 	private NetworkController() {
-		// TODO Auto-generated constructor stub
 	}
 	
 	public static NetworkController getInstance()
