@@ -1,6 +1,5 @@
 import java.net.InetAddress;
 
-
 public class rdfs {
 
 	/**
@@ -8,7 +7,9 @@ public class rdfs {
 	 */
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-
+		
+		Log.init(Log.Priority.DEBUG);
+		Log.me(null, "RDFS starting...");
 		
 	}
 
