@@ -28,7 +28,7 @@ public class FileSystemController {
 		return fsc;
 	}
 	
-	public boolean saveNewFile(String filename, int chunkSeq, byte[] data)
+	public synchronized boolean saveNewFile(String filename, int chunkSeq, byte[] data)
 	{
 		Log.me(this, "Saving new file to Local File System: "+ filename);
 		UUID fileId = ft.addExistingFile(filename, chunkSeq);
@@ -43,7 +43,7 @@ public class FileSystemController {
 		return true;
 	}
 	
-	public boolean saveUpdatedFile(String filename, int chunkSeq, byte[] data)
+	public synchronized boolean saveUpdatedFile(String filename, int chunkSeq, byte[] data)
 	{
 		Log.me(this, "Saving updated file to Local File System: "+ filename);
 		UUID existingFileId = ft.lookupByName(filename);
@@ -59,19 +59,19 @@ public class FileSystemController {
 		return removeFile(existingFileId);
 	}
 	
-	public boolean hasFile(String filename)
+	public synchronized boolean hasFile(String filename)
 	{
 		Log.me(this, "Looking for file: "+ filename);
 		return ft.lookupByName(filename) != null;
 	}
 	
-	public boolean hasChunk(String filename, int chunkSeq)
+	public synchronized boolean hasChunk(String filename, int chunkSeq)
 	{
 		Log.me(this, "Looking for file: "+ filename);
 		return ft.lookupByName(filename,chunkSeq) != null;
 	}
 	
-	public byte[] getFileData(String filename, int offset, int maxData)
+	public synchronized byte[] getFileData(String filename, int offset, int maxData)
 	{
 		Log.me(this, "Getting data from file: "+ filename);
 		UUID existingFileId = ft.lookupByName(filename);
@@ -96,7 +96,7 @@ public class FileSystemController {
 		}
 	}
 	
-	public byte[] getFileData(String filename, int chunkSeq, int offset, int maxData)
+	public synchronized byte[] getFileData(String filename, int chunkSeq, int offset, int maxData)
 	{
 		Log.me(this, "Getting data from file: "+ filename);
 		UUID existingFileId = ft.lookupByName(filename,chunkSeq);
@@ -121,21 +121,21 @@ public class FileSystemController {
 		}
 	}
 	
-	public boolean removeChunk(String filename, int chunkSeq)
+	public synchronized boolean removeChunk(String filename, int chunkSeq)
 	{
 		Log.me(this, "Removing file from Local File System: "+ filename);
 		UUID fileId = ft.lookupByName(filename, chunkSeq);
 		return removeFile(fileId);
 	}
 	
-	public boolean removeFile(String filename)
+	public synchronized boolean removeFile(String filename)
 	{
 		Log.me(this, "Removing file from Local File System: "+ filename);
 		UUID fileId = ft.lookupByName(filename);
 		return removeFile(fileId);
 	}
 	
-	public boolean removeFile(UUID fileId)
+	public synchronized boolean removeFile(UUID fileId)
 	{
 		Log.me(this, "Removing file from Local File System with UUID: "+ fileId.toString());
 		try {
