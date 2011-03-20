@@ -6,10 +6,12 @@ public class rdfs {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
 		
 		Log.init(Log.Priority.DEBUG);
 		Log.me(null, "RDFS starting...");
+		
+		NetworkController nc = NetworkController.getInstance();
+		nc.startListener();
 		
 	}
 

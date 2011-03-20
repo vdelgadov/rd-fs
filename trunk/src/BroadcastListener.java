@@ -25,23 +25,21 @@ public class BroadcastListener implements Runnable {
 
 			MulticastSocket ms = new MulticastSocket(port);
 			ms.joinGroup(ia);
-			while (true) {
+			while (nc.runListener) {
 				ms.receive(dp);
-				this.nc.queueDatagramPacket(dp);
-				//TODO: agregar logger
-				/*String s = new String(dp.getData(),0,dp.getLength());
-				s +=  dp.getAddress().toString();
-				System.out.println(s);
-				*/
+				this.nc.processPacket(dp);
+
+				
+				Log.me(this, "Received Packet: " + new String(dp.getData(),0,dp.getLength()));
 			}
 			
 		}
 		
 		catch (SocketException se) {
-			System.err.println(se);
+			Log.me(this,se.getMessage());
 		}
 		catch (IOException ie) {
-			System.err.println(ie);
+			Log.me(this,ie.getMessage());
 		}
 		
 	}

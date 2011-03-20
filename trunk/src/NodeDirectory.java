@@ -1,6 +1,11 @@
+import java.util.LinkedList;
+
 
 public class NodeDirectory {
+	private LinkedList<Node> nodes = new LinkedList<Node>();
 	
+	
+	//TODO ya que se definan los metodos agregarles synchronized
 	public boolean addNode(Node node)
 	{
 		return false;
