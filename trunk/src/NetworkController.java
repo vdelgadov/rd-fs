@@ -1,5 +1,4 @@
 import java.net.DatagramPacket;
-import java.util.LinkedList;
 
 public class NetworkController {
 
@@ -10,7 +9,7 @@ public class NetworkController {
 	
 	
 	//ThreadControll
-	public boolean runListener = true; 
+	public boolean runListener = true;  //dont modify!!!!!!
 	
 	private NetworkController() {
 		// TODO Auto-generated constructor stub
