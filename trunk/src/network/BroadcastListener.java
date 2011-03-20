@@ -1,7 +1,11 @@
+package network;
+
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
+
+import common.Log;
 
 public class BroadcastListener implements Runnable {
 	NetworkController nc;
