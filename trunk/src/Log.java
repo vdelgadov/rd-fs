@@ -37,16 +37,6 @@ public class Log {
 	{
 		this.p = p;
 		this.f = new File(Log.LOG_FILENAME);
-		
-		try
-		{
-			this.fstream = new FileWriter(this.f, true);
-			this.out = new BufferedWriter(this.fstream);
-		}
-		catch(IOException ioe)
-		{
-			System.err.println("Log file cannot be opened: "+ioe.getMessage());
-		}
 	}
 	
 	private static Log getInstance(Priority p)
@@ -77,7 +67,8 @@ public class Log {
 		}
 		try
 		{
-			
+			l.fstream = new FileWriter(l.f, true);
+			l.out = new BufferedWriter(l.fstream);
 			SimpleDateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 			l.out.write(df.format(new Date())+ "  ");
 			if (o != null)
@@ -86,6 +77,8 @@ public class Log {
 			}
 		    l.out.write(message+"\n\r");
 		    //Close the output stream
+		    l.out.close();
+		    l.fstream.close();
 	    }
 		catch (Exception e)
 		{//Catch exception if any
