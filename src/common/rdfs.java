@@ -1,3 +1,5 @@
+package common;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.DataInputStream;
@@ -7,6 +9,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.UUID;
+
+import network.NetworkController;
+
 
 
 public class rdfs {

@@ -1,6 +1,9 @@
+package fileSystem;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.UUID;
+
+import common.Log;
 
 
 public class FileTable implements Serializable {

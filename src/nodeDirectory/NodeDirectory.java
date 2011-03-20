@@ -1,5 +1,9 @@
+package nodeDirectory;
+
 import java.util.Date;
 import java.util.LinkedList;
+
+import common.Log;
 
 public class NodeDirectory {
 	private LinkedList<Node> nodes = new LinkedList<Node>();
