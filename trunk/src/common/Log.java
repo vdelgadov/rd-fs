@@ -75,7 +75,7 @@ public class Log {
 			{
 				l.out.write(o.toString()+":");
 			}
-		    l.out.write(message+System.getenv("line.separator"));
+		    l.out.write(message+System.getProperty("line.separator"));
 		    //Close the output stream
 		    l.out.close();
 		    l.fstream.close();
