@@ -58,7 +58,7 @@ public class Log {
 		me(o, message, Priority.DEBUG);
 	}
 	
-	public static void me(Object o, String message, Priority p)
+	public synchronized static void me(Object o, String message, Priority p)
 	{
 		if (!p.isHigherPriorityThan(l.p))
 		{
