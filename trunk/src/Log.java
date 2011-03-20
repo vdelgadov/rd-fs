@@ -41,7 +41,7 @@ public class Log {
 		try
 		{
 			this.fstream = new FileWriter(this.f, true);
-			this.out = new BufferedWriter(l.fstream);
+			this.out = new BufferedWriter(this.fstream);
 		}
 		catch(IOException ioe)
 		{
