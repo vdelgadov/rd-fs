@@ -2,6 +2,9 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 
 public class Log {
@@ -74,6 +77,8 @@ public class Log {
 		try
 		{
 			BufferedWriter out = new BufferedWriter(l.fstream);
+			SimpleDateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+			out.write(df.format(new Date())+ "  ");
 			if (o != null)
 			{
 				out.write(o.toString()+":");
