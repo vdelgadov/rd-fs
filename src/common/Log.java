@@ -31,6 +31,7 @@ public class Log {
 	private FileWriter fstream;
 	private BufferedWriter out;
 	
+	private static boolean isInitialized = false;
 	private static Log l;
 	
 	private Log(Priority p)
@@ -51,6 +52,7 @@ public class Log {
 	public static void init(Priority p)
 	{
 		Log.getInstance(p);
+		Log.isInitialized = true;
 	}
 	
 	public static void me(Object o, String message)
@@ -60,6 +62,7 @@ public class Log {
 	
 	public synchronized static void me(Object o, String message, Priority p)
 	{
+		if (!Log.isInitialized) { System.err.println("Log was not initialized properly."); return; };
 		if (!p.isHigherPriorityThan(l.p))
 		{
 			// Nothing should be saved, the priority isn't high enough.
