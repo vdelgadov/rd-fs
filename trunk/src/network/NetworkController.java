@@ -1,11 +1,14 @@
 package network;
 
 import java.net.DatagramPacket;
+import java.util.ArrayList;
+import java.util.UUID;
 
 import common.Log;
 import fileSystem.FileSystemController;
 
 import nodeDirectory.DirectoryController;
+import nodeDirectory.Node;
 
 public class NetworkController {
 
@@ -16,7 +19,7 @@ public class NetworkController {
 	
 	
 	//ThreadControll
-	public boolean runListener = true;  //dont modify!!!!!!
+	public boolean runListener = true;  //don't modify!!!!!!
 	
 	private NetworkController() {
 	}
@@ -34,7 +37,7 @@ public class NetworkController {
 	{
 		Log.me(this, "Starting Broadcast Listener");
 		nc.runListener = true;
-		BroadcastListener bl = new BroadcastListener(getInstance());
+		BroadcastListener bl = new BroadcastListener(NetworkController.getInstance());
 		new Thread(bl).start();
 	}
 	public void stopListener()
@@ -47,8 +50,13 @@ public class NetworkController {
 	public synchronized void processPacket(DatagramPacket dp)
 	{
 		String message = new String(dp.getData(),0,dp.getLength());
-		String[] split = message.split("@", 3);
+		String[] split = message.split("@", 2);
 		Log.me(this, "Proscessing packet: " + message);
+		if(split[0].equals("imAlive"))
+		{
+			Node n = new Node(UUID.fromString(split[1]));
+			this.DC.getNodeDirectory().addNode(n);
+		}
 	}
 
 }
