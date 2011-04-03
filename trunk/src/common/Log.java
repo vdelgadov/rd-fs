@@ -5,11 +5,22 @@ import java.io.FileWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-
+/**
+ * Log class that is used on the RDFS project.
+ * 
+ * @author Pavooou
+ *
+ */
 public class Log {
 	
 	public static final String LOG_FILENAME = "rdfs.log"; 
 	
+	/**
+	 * Priority enum, to be used on the Log class.
+	 * 
+	 * @author Pavooou
+	 *
+	 */
 	public enum Priority
 	{
 		ERROR (0), WARNING (1), DEBUG (2);
@@ -20,6 +31,12 @@ public class Log {
 			this.priority = p;
 		}
 		
+		/**
+		 * Verifies if this instance has higher priority than the parameter.
+		 * 
+		 * @param p value that compares it to.
+		 * @return true if higher priority, false otherwise
+		 */
 		public boolean isHigherPriorityThan(Priority p)
 		{
 			return priority <= p.priority;
@@ -49,17 +66,35 @@ public class Log {
 		return l;
 	}
 	
+	/**
+	 * Initializes the Log.
+	 * 
+	 * @param p Lowest priority that should be saved onto the log-file.
+	 */
 	public static void init(Priority p)
 	{
 		Log.getInstance(p);
 		Log.isInitialized = true;
 	}
 	
+	/**
+	 * Logs a message on the log file. Verifies it has enough priority to save it and formats it for saving; uses debug priority.
+	 * 
+	 * @param o Instance of an object which is calling the log service.
+	 * @param message Message to be logged on the file
+	 */	
 	public static void me(Object o, String message)
 	{
 		me(o, message, Priority.DEBUG);
 	}
 	
+	/**
+	 * Logs a message on the log file. Verifies it has enough priority to save it and formats it for saving.
+	 * 
+	 * @param o Instance of an object which is calling the log service.
+	 * @param message Message to be logged on the file
+	 * @param p Priority of the message
+	 */
 	public synchronized static void me(Object o, String message, Priority p)
 	{
 		if (!Log.isInitialized) { System.err.println("Log was not initialized properly."); return; };
