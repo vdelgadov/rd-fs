@@ -2,6 +2,7 @@ package fileSystem;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.RandomAccessFile;
+import java.math.BigInteger;
 import java.util.UUID;
 
 import common.Log;
@@ -17,6 +18,9 @@ public class FileSystemController {
 	private FileSystemController(String path)
 	{
 		this.path = path;
+		ft = new FileTable();
+
+		// TODO pablo: Look for a persisted FileTable. If found, check for its validity and deserialize it. 
 	}
 	
 	public static FileSystemController getInstance(String path)
@@ -26,6 +30,11 @@ public class FileSystemController {
 			fsc = new FileSystemController(path);
 		}
 		return fsc;
+	}
+	
+	public synchronized void resetTable()
+	{
+		ft = new FileTable();
 	}
 	
 	public synchronized boolean saveNewFile(String filename, int chunkSeq, byte[] data)
@@ -63,6 +72,12 @@ public class FileSystemController {
 	{
 		Log.me(this, "Looking for file: "+ filename);
 		return ft.lookupByName(filename) != null;
+	}
+	
+	public synchronized int[] getAllChunkSeqs(String filename)
+	{
+		Log.me(this, "Looking for all chunks for file: " + filename);
+		return ft.getAllChunkSeqs(filename);
 	}
 	
 	public synchronized boolean hasChunk(String filename, int chunkSeq)
@@ -165,5 +180,11 @@ public class FileSystemController {
 			 Log.me(this,"File " + path + fileId.toString() + " could not be deleted.", Log.Priority.ERROR);
 			 return false;
 		 }
+	}
+	
+	public BigInteger getFreeSize()
+	{
+		// TODO pablo: actually do something.
+		return BigInteger.ZERO;
 	}
 }

@@ -6,6 +6,11 @@ import java.util.UUID;
 import common.Log;
 
 
+/**
+ * @author Pavooou
+ * A FileTable, to save the relation between the logical files, chunks 
+ * and physical files in each node. 
+ */
 public class FileTable implements Serializable {
 	
 	/**
@@ -13,8 +18,11 @@ public class FileTable implements Serializable {
 	 */
 	private static final long serialVersionUID = 7738165900361831927L;
 	
-	ArrayList<Entry> entries;
+	private ArrayList<Entry> entries;
 	
+	/**
+	 * 
+	 */
 	public FileTable()
 	{
 		entries = new ArrayList<Entry>();
@@ -69,6 +77,24 @@ public class FileTable implements Serializable {
 		}
 		Log.me(this, "File could not be found: "+ filename,Log.Priority.WARNING);
 		return null;
+	}
+	
+	public int[] getAllChunkSeqs(String filename)
+	{
+		Log.me(this, "Looking up for file: "+ filename);
+		ArrayList<Integer> chunkSeqs = new ArrayList<Integer>();
+		int[] chunkSeqArray;
+		for (Entry entry : entries)
+		{
+			if (entry.getFilename().equals(filename))
+			{
+				chunkSeqs.add(entry.getChunkSequence());
+			}
+		}
+		chunkSeqArray = new int[chunkSeqs.size()];
+		for(int i = 0;i < chunkSeqArray.length;i++)
+			chunkSeqArray[i] = chunkSeqs.get(i);
+		return chunkSeqArray;
 	}
 	
 	public boolean removeExistingFile(UUID id)
