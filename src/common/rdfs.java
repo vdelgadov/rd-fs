@@ -16,6 +16,8 @@ import network.NetworkController;
 
 public class rdfs {
 
+	public static final String UUID_FILENAME = "uuid"; 
+	
 	/**
 	 * @param args
 	 */
@@ -27,7 +29,12 @@ public class rdfs {
 		
 		
 		Log.me(null, "Obtaining UUID");
-		getUUID();
+		uuid = getUUID();
+		if (uuid == null)
+		{
+			Log.me(null, "Error obtaining or generating UUID", Log.Priority.ERROR);
+			System.exit(1);
+		}
 		
 		NetworkController nc = NetworkController.getInstance();
 		nc.startListener();
@@ -45,45 +52,95 @@ public class rdfs {
 		*/
 		
 	}
-	public static void getUUID()
+	
+	/**
+	 * Obtains the UUID for this node, either from a file or generates a new one.
+	 */
+	public static UUID getUUID()
 	{
-		File f = new File("uuid");
+		File f = new File(UUID_FILENAME);
+		UUID uuid = null;
 		if (f.exists())
 		{
-			FileInputStream fstream;
-			try {
-				fstream = new FileInputStream("uuid");
-			    DataInputStream in = new DataInputStream(fstream);
-			    BufferedReader br = new BufferedReader(new InputStreamReader(in));
-				uuid = UUID.fromString(br.readLine());
-				Log.me(null, "Using existent UUID: " + uuid.toString());
-			}
-			catch (IOException e) {
-				Log.me(null,e.getMessage());
-				return;
-			}
-		}
-		else
-		{
-			uuid = UUID.randomUUID();
-			try
-			{
-				FileWriter fstream;
-				BufferedWriter out;
-				
-				fstream = new FileWriter(f);
-				out = new BufferedWriter(fstream);
-				out.write(uuid.toString());
-			    out.close();
-			    fstream.close();
-		    }
-			catch (Exception e)
-			{//Catch exception if any
-				System.err.println("Error: " + e.getMessage());
-		    }
+			uuid = getUUID(f);
 			
-			Log.me(null, "Generated UUID: " + uuid.toString());
+			if (uuid != null)
+				Log.me(null, "Obtained UUID: " + uuid.toString());
 		}
+		if (uuid == null)
+		{
+			uuid = generateUUID(f);
+			
+			if (uuid != null)
+				Log.me(null, "Generated UUID: " + uuid.toString());
+		}
+		return uuid;
+	}
+	/**
+	 * Generates a new random UUID to assign it to this node, and saves it to a file.
+	 * 
+	 * @param f file where the generated UUID is going to be saved.
+	 */
+	private static UUID generateUUID(File f) {
+		UUID uuid = UUID.randomUUID();
+		FileWriter fstream = null;
+		BufferedWriter out = null;
+		try
+		{
+			fstream = new FileWriter(f);
+			out = new BufferedWriter(fstream);
+			out.write(uuid.toString());
+			out.flush();
+		}
+		catch (Exception e)
+		{//Catch exception if any
+			Log.me(null, "Problem saving the generated UUID in the file", Log.Priority.ERROR);
+		}
+		finally
+		{
+			if (fstream != null)
+				try 
+				{
+					fstream.close();
+				}
+				catch(Exception e)
+				{
+					Log.me(null, "Problem closing UUID file writer", Log.Priority.WARNING);
+				}
+		}
+		return uuid;
+	}
+	/**
+	 * Obtains the UUID from an existing file.
+	 * 
+	 * @param f file which only contains the UUID.
+	 */
+	private static UUID getUUID(File f) {
+		FileInputStream fstream = null;
+		UUID uuid = null;
+		try {
+			fstream = new FileInputStream(f);
+		    DataInputStream in = new DataInputStream(fstream);
+		    BufferedReader br = new BufferedReader(new InputStreamReader(in));
+			uuid = UUID.fromString(br.readLine());
+			Log.me(null, "Using existent UUID: " + uuid.toString());
+		}
+		catch (IOException e) {
+			Log.me(null,"Error getting existing UUID: "+e.getMessage(),Log.Priority.ERROR);
+		}
+		finally
+		{
+			if (fstream != null)
+				try 
+				{
+					fstream.close();
+				}
+				catch(Exception e)
+				{
+					Log.me(null, "Problem closing UUID file", Log.Priority.WARNING);
+				}
+		}
+		return uuid;
 	}
 
 }
