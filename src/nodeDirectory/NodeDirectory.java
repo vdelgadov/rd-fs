@@ -7,6 +7,7 @@ import common.Log;
 
 public class NodeDirectory {
 	private LinkedList<Node> nodes = new LinkedList<Node>();
+	private int timeToDeleteNode = 60000;
 	
 
 	public synchronized boolean nodeExists(Node n)
@@ -21,14 +22,17 @@ public class NodeDirectory {
 		return false;
 	}
 
-	public synchronized boolean addNode(Node node)
+	public synchronized void addNode(Node node)
 	{
 		Log.me(this, "Adding node to list: "+ node.uuid.toString());
 		if(!nodeExists(node))
 		{
 			nodes.add(node);
 		}
-		return false;
+		else
+		{
+			this.nodeUpdating(node);
+		}
 	}
 
 	public synchronized void removeNode(Node node)
@@ -36,7 +40,7 @@ public class NodeDirectory {
 		Log.me(this, "Removing node from list: "+ node.uuid.toString());
 		for(int i = 0; i<nodes.size(); i++)
 		{
-			if(nodes.get(i).uuid.toString().equals(node.uuid.toString()))
+			if(nodes.get(i).equals(node))
 			{
 				nodes.remove(i);
 				break;
@@ -50,7 +54,7 @@ public class NodeDirectory {
 		Node x =  null;
 		for (Node tmpNode : nodes) 
 		{
-			if (tmpNode.uuid.toString().equals(node.uuid.toString()))
+			if (tmpNode.equals(node))
 			{
 				x = tmpNode;
 				break;
@@ -76,11 +80,11 @@ public class NodeDirectory {
 		{
 			for(int i = 0; i<nodes.size(); i++)
 			{
-				Date lastUpdatePlusOffset = new Date(nodes.get(i).lastUpdate.getTime()+60000);
+				Date lastUpdatePlusOffset = new Date(nodes.get(i).lastUpdate.getTime()+ this.timeToDeleteNode);
 
 				if( lastUpdatePlusOffset.before(new Date() ))
 				{
-					nodes.remove(i);
+					nodes.get(i).setActive(false);
 					Log.me(this, "Removing node due to inactivity: " + nodes.get(i).uuid.toString());
 					break;
 				}

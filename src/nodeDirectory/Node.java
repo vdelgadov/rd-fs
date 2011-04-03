@@ -6,12 +6,14 @@ import java.util.UUID;
 public class Node {
 	UUID uuid;
 	Date lastUpdate;
+	private boolean active;
 	
 	
 	public Node(UUID uuid)
 	{
 		this.uuid = uuid;
 		this.lastUpdate = new Date();
+		this.setActive(true);
 	}
 	
 	@Override
@@ -35,5 +37,13 @@ public class Node {
 			return false;
 		}
 		
+	}
+
+	void setActive(boolean active) {
+		this.active = active;
+	}
+
+	boolean isActive() {
+		return active;
 	}
 }
