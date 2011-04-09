@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <RDFS>
 	<Properties>
-		<ServerPort>4572</ServerPort>
-	</Properties>
+		<BroadcastPort>4572</BroadcastPort>
+		<P2PPort>4573</P2PPort></Properties>
 </RDFS>

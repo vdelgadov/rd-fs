@@ -46,7 +46,8 @@ public class CommonTest
 	@Test
 	public void readProperties() throws Exception
 	{
-		assertTrue(common.RDFSProperties.getServerPort() > -1);
+		assertTrue(common.RDFSProperties.getBroadcastPort() > -1);
+		assertTrue(common.RDFSProperties.getP2PPort() > -1);
 	}
 	
 }
