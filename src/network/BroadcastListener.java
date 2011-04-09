@@ -6,6 +6,7 @@ import java.net.InetAddress;
 import java.net.MulticastSocket;
 
 import common.Log;
+import common.RDFSProperties;
 
 public class BroadcastListener implements Runnable {
 	NetworkController nc;
@@ -21,11 +22,10 @@ public class BroadcastListener implements Runnable {
 		try {
 			InetAddress ia = InetAddress.getByName("224.0.0.205");
 			byte[] buffer = new byte[65535];
-			int port = 4572;
 
 			DatagramPacket dp = new DatagramPacket(buffer, buffer.length);
 
-			MulticastSocket ms = new MulticastSocket(port);
+			MulticastSocket ms = new MulticastSocket(RDFSProperties.getBroadcastPort());
 			ms.joinGroup(ia);
 			while (nc.runListener) {
 				try {
