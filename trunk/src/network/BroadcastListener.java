@@ -32,6 +32,7 @@ public class BroadcastListener implements Runnable {
 					ms.setSoTimeout(5000);
 					ms.receive(dp);
 					Log.me(this, "Received Packet: " + new String(dp.getData(),0,dp.getLength()));
+					//TODO is it necessary to copy the object? add to a Thread?
 					this.nc.processPacket(dp);
 				}
 				catch(Exception e)
