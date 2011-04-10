@@ -4,8 +4,10 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
+import java.net.UnknownHostException;
 
 import common.Log;
+import common.rdfs;
 
 public class imAliveThread implements Runnable {
 	NetworkController nc;
@@ -14,40 +16,37 @@ public class imAliveThread implements Runnable {
 	{
 		this.nc = nc;
 	}
-	
+
 	@Override
 	public void run() {
 		while(true)
 		{
+			InetAddress ia;
 			try {
-				InetAddress ia = InetAddress.getByName("224.0.0.205");
-				byte[] buffer = new byte[65535];
+				ia = InetAddress.getByName("224.0.0.205");
+
+				String str = "imAlive" + rdfs.uuid;
+				byte[] buffer = str.getBytes();
 				int port = 4572;
 
 				DatagramPacket dp = new DatagramPacket(buffer, buffer.length);
 
-				MulticastSocket ms = new MulticastSocket(port);
-				ms.joinGroup(ia);
 				while (nc.runListener) {
 					try {
-						ms.setSoTimeout(5000);
-						ms.receive(dp);
-						Log.me(this, "Received Packet: " + new String(dp.getData(),0,dp.getLength()));
-						this.nc.processPacket(dp);
+						Thread.sleep(5000);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
 					}
-					catch(Exception e)
-					{
-						//Log.me(this,e.getMessage());
-					}
-
+					//TODO: pablo: send udp packet
+					Log.me(this, "Sending Packet: " + new String(dp.getData(),0,dp.getLength()));
 				}
+			} catch (UnknownHostException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 
-			}
-			catch (IOException ie) {
-				Log.me(this,ie.getMessage());
-			}
 		}
-		
-	}
 
+	}
 }
+
