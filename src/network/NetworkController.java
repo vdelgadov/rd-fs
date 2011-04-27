@@ -1,11 +1,16 @@
 package network;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.InvalidClassException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
-import java.math.BigInteger;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
+import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.UUID;
 import java.util.zip.CRC32;
 import java.util.zip.Checksum;
@@ -16,6 +21,7 @@ import fileSystem.FileSystemController;
 
 import nodeDirectory.DirectoryController;
 import nodeDirectory.Node;
+import network.entities.*;
 
 
 public class NetworkController {
@@ -41,7 +47,7 @@ public class NetworkController {
 		}
 		return nc;
 	}
-	
+
 	/**
 	 * Starts the Broadcast Listener
 	 */
@@ -61,7 +67,7 @@ public class NetworkController {
 		nc.runListener = false;
 	}
 
-	
+
 	/**
 	 * This method will process all packets that are received via a broadcast.
 	 * @param dp
@@ -72,6 +78,7 @@ public class NetworkController {
 			String message = new String(dp.getData(),0,dp.getLength());
 			String[] split = message.split("@", 2);
 			Log.me(this, "Proscessing packet: " + message);
+			
 			//Im alive packet format: imAlive@UUID
 			if(split[0].equals("imAlive"))
 			{
@@ -82,52 +89,46 @@ public class NetworkController {
 			//format: pSave@sizeBytes@UUID
 			else if(split[0].equals("pSave"))
 			{
-				String[] saveSplit = split[1].split("@", 2);
 				
-				BigInteger  bytes = new BigInteger(saveSplit[0]);
+				String[] saveSplit = split[1].split("@", 2);
+
+				int  bytes = Integer.parseInt(saveSplit[0]);
 				UUID uuid = UUID.fromString(saveSplit[1]);
-								
-				if(this.FSC.getFreeSize().compareTo(bytes) >= 0)
+
+				if((int)this.FSC.getFreeSize() >= bytes)
 				{
 					InetAddress IPAddress = dp.getAddress();
-					Socket socket = new Socket(IPAddress, RDFSProperties.getP2PPort());
-					socket.setSoTimeout(1000);
 					
-				    OutputStream os = socket.getOutputStream();
-				    
-				    byte[] sendData = new byte[1024];
-					//Send Response format: rSave@UUID
-					String response = "rSaveMe@" + uuid;
-					sendData = response.getBytes();
-				    os.write(sendData);
-				    
-				    //TODO  how to create an array of size big int
-				    byte[] receiveData = new byte[bytes.intValue()];
-				    InputStream is = socket.getInputStream();
-				    int numBytesReaded = is.read(receiveData, 0, bytes.intValue());
-				    //If the requester Drops the petition it means that another node will save the file
-				    if(receiveData.toString().equals("Drop"))
-				    {
-				    	return;
-				    }
-				    else if(numBytesReaded != bytes.intValue())
-				    {
-				    	//TODO vic: handle error
-				    }
-				    
-				    //TODO pablo: save file and return crc
-				    
-				    
-				    
-				    
-				    socket.close();
-				    
+					//Send Response format: rSave@UUID  (i can save the file)
+					TextObject to = new TextObject("rSaveMe@" + uuid);
+					this.sendObject(to);
 					
+					Object received = this.receiveObject(IPAddress);
+					
+					if(received instanceof TextObject)
+					{
+						TextObject text = (TextObject)received;
+						if(text.getText().equals("Drop"))
+						{
+							Log.me(this, "Received drop petition");
+						}
+						
+					}
+					else if(received instanceof byteObject)
+					{
+						//TODO pablo: save file and return crc
+					}
+
 				}
+			}
+			//Petition to send file
+			else if(split[0].equals("get"))
+			{
+				
 			}
 			//receiving file to be saved
 			//TODO vic: this methods shouldnt be here?? only broadcast?
-			if(split[0].equals("send"))
+			/*if(split[0].equals("send"))
 			{
 
 				String[] sendSplit = split[1].split("@", 5);
@@ -149,12 +150,7 @@ public class NetworkController {
 					//TODO vic: send response (failed)
 
 				}
-			}
-			//Petition to send file
-			if(split[0].equals("get"))
-			{
-
-			}
+			}*/
 
 
 		}
@@ -163,28 +159,72 @@ public class NetworkController {
 			Log.me(this, "Failed to Process Packet - " + e.toString());
 		}
 	}
-	
-	private byte[] toByteArray(int in_int) {
-	    byte a[] = new byte[4];
-	    for (int i=0; i < 4; i++) {
-
-	      int  b_int = (in_int >> (i*8) ) & 255;
-	      byte b = (byte) ( b_int );
-	 
-	      a[i] = b;
-	     }
-	    return a;
-	  }
-	private int toInt(byte[] byte_array_4) {
-	    int ret = 0;  
-	    for (int i=0; i<4; i++) {
-	      int b = (int) byte_array_4[i];
-	      if (i<3 && b<0) {
-	        b=256+b;
-	      }
-	      ret += b << (i*8);
-	    }
-	    return ret;
-	  }
+	private Object receiveObject(InetAddress IPAddress)
+	{
+		Socket socket;
+		try
+		{
+			socket = new Socket(IPAddress, RDFSProperties.getP2PPort());
+			InputStream iStream = socket.getInputStream();
+			ObjectInputStream oiStream = new ObjectInputStream(iStream);
+			return oiStream.readObject();
+		}
+		catch (UnknownHostException e)
+		{
+			Log.me(this, "Failed to receive Object from host: " + IPAddress  + " - " + e.toString());
+			return null;
+		}
+		catch (IOException e)
+		{
+			Log.me(this, "Failed to receive Object  because of IO from host: " + IPAddress  + " - " + e.toString());
+			return null;
+		}
+		catch(ClassNotFoundException e)
+		{
+			Log.me(this, "Failed to receive Object  because of ClassNotFound from host: " + IPAddress  + " - " + e.toString());
+			return null;
+		}
+	}
+	private boolean sendObject(Object obj)
+	{
+		ServerSocket serverSocket = null;
+		try
+        {
+			serverSocket = new java.net.ServerSocket(RDFSProperties.getP2PPort());
+	        assert serverSocket.isBound();
+	        if (serverSocket.isBound())
+	        {
+	        	Log.me(this, "Sendig Object");
+	        }
+			 Socket sock = serverSocket.accept();
+	         OutputStream oStream = sock.getOutputStream();
+	         ObjectOutputStream ooStream = new ObjectOutputStream(oStream);
+	         ooStream.writeObject(obj);  // send serilized payload
+	         ooStream.close();
+	         return true;
+        }
+        catch (SecurityException e)
+        {
+        	Log.me(this,"Unable to get host address due to security. - " + e.toString());
+        	return false;
+        }
+        catch (IOException e)
+        {
+        	Log.me(this,"Unable to read data from an open socket. - " + e.toString());
+        	return false;
+        }
+        finally
+        {
+            try
+            {
+            	serverSocket.close();
+            }
+            catch (IOException e)
+            {
+            	Log.me(this,"Unable to close an open socket. - " + e.toString());
+                
+            }
+        }
+	}
 
 }
