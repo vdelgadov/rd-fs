@@ -137,7 +137,7 @@ public class NetworkController {
 						}
 						
 					}
-					else if(received instanceof ByteObject)
+					else if(received instanceof BytesObject)
 					{
 						//TODO pablo: save file and return crc
 					}
