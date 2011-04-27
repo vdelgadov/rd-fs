@@ -5,11 +5,11 @@ import java.io.InterruptedIOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
-import java.util.concurrent.ExecutorService;
+/*import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.Callable;
-
+*/
 import common.Log;
 import common.RDFSProperties;
 
@@ -31,7 +31,7 @@ public class BroadcastListener implements Runnable {
 
 			final MulticastSocket ms = new MulticastSocket(RDFSProperties.getBroadcastPort());
 			ms.joinGroup(ia);
-			ExecutorService executor = Executors.newFixedThreadPool(20);
+			//ExecutorService executor = Executors.newFixedThreadPool(20);
 			while (nc.runListener) {
 
 
