@@ -1,9 +1,12 @@
 package fileSystem;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
 import java.io.RandomAccessFile;
-import java.math.BigInteger;
 import java.util.UUID;
 
 import common.Log;
@@ -26,12 +29,15 @@ public class FileSystemController {
 	
 	private static FileSystemController fsc;
 	
+	private static final String FILE_TABLE_FILENAME = ".filetable";
+	
 	private FileSystemController(String path)
 	{
 		FileSystemController.path = path;
-		ft = new FileTable();
-
-		// TODO pablo: Look for a persisted FileTable. If found, check for its validity and deserialize it. 
+		if ((ft = FileTableLookup()) == null)
+		{
+			ft = new FileTable();
+		}
 	}
 	
 	/**
@@ -96,6 +102,7 @@ public class FileSystemController {
 					Log.me(this, "Couldn't close the file saver.");
 				}
 		}
+		FileTablePersist();
 		return true;
 	}
 	
@@ -129,6 +136,7 @@ public class FileSystemController {
 					Log.me(this, "Couldn't close the file saver.");
 				}
 		}
+		// FileTablePersistence will occur on the following function, no need to duplicate
 		return removeFile(existingFileId);
 	}
 	
@@ -353,6 +361,7 @@ public class FileSystemController {
 		 }
 		 if (removalStatus)
 			 ft.removeExistingFile(fileId);
+		 FileTablePersist();
 		 return removalStatus;
 	}
 	
@@ -368,13 +377,94 @@ public class FileSystemController {
 	}
 	
 	/**
-	 * Retrieves the physical free space on the disk.
+	 * Retrieves the physical free space on the path.
 	 * 
 	 * @return The total space available (in bytes)
 	 */
-	public BigInteger getFreeSize()
+	public long getFreeSize()
 	{
-		// TODO pablo: actually do something.
-		return BigInteger.ZERO;
+		File f = new File(FileSystemController.path);
+		return f.getFreeSpace();
+	}
+	
+	private FileTable FileTableLookup()
+	{
+		Log.me(this, "Looking up for a existing file table");
+		FileTable ft = null;
+		
+		File file = new File(path+FILE_TABLE_FILENAME);
+		if (!file.canRead())
+		{
+			if (file.exists())
+			{
+				Log.me(this, "Couldn't read the file table", Log.Priority.WARNING);
+			}
+			Log.me(this, "The filetable file does not exist.");
+			return null;
+		}
+		ObjectInputStream in = null;
+		try
+		{
+			in = new ObjectInputStream(new FileInputStream(file));
+			ft = (FileTable) in.readObject();
+		}
+		catch(Exception e)
+		{
+			Log.me(this, "Could not deserialize filetable "+e.getMessage(), 
+					Log.Priority.WARNING);
+			ft = null;
+		}
+		finally
+		{
+			if (in != null)
+				try
+				{
+					in.close();
+				}
+				catch(final Exception e)
+				{
+					Log.me(this, "Couldn't close the file table accesor");
+				}
+		}
+		return ft;
+	}
+	
+	private void FileTablePersist()
+	{
+		Log.me(this, "Persisting the filetable.");
+		File file = new File(path+FILE_TABLE_FILENAME);
+		if (file.exists() && !file.canWrite())
+		{
+			Log.me(this, "Cannot persist the filetable file due to permissions.");
+			return;
+		}
+		ObjectOutput out = null;
+		try
+		{
+			if (!file.exists() && !file.createNewFile())
+			{
+				Log.me(this, "Cannot persist the filetable file due to permissions on creating the file.");
+				return;
+			}
+			out = new ObjectOutputStream(new FileOutputStream(file));
+		    out.writeObject(ft);
+		}
+		catch(Exception e)
+		{
+			Log.me(this, "Could not persist filetable "+e.getMessage(), 
+					Log.Priority.WARNING);
+		}
+		finally
+		{
+			if (out != null)
+				try
+				{
+					out.close();
+				}
+				catch(final Exception e)
+				{
+					Log.me(this, "Couldn't close the file table accesor");
+				}
+		}
 	}
 }
