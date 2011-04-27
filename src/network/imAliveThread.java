@@ -1,12 +1,12 @@
 package network;
 
-import java.io.IOException;
 import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.MulticastSocket;
-import java.net.UnknownHostException;
+
 
 import common.Log;
+import common.RDFSProperties;
 import common.rdfs;
 
 public class imAliveThread implements Runnable {
@@ -19,15 +19,14 @@ public class imAliveThread implements Runnable {
 
 	@Override
 	public void run() {
-		while(true)
+		while(nc.runImAliveThread)
 		{
 			InetAddress ia;
 			try {
 				ia = InetAddress.getByName("224.0.0.205");
 
-				String str = "imAlive" + rdfs.uuid;
+				String str = "imAlive@" + rdfs.uuid;
 				byte[] buffer = str.getBytes();
-				int port = 4572;
 
 				DatagramPacket dp = new DatagramPacket(buffer, buffer.length);
 
@@ -35,18 +34,25 @@ public class imAliveThread implements Runnable {
 					try {
 						Thread.sleep(5000);
 					} catch (InterruptedException e) {
-						e.printStackTrace();
+						Log.me(this, "Error while trying to sleep in ImAliveThread - " + e.toString());
 					}
-					//TODO: pablo: send udp packet
+					//TODO: vic: change port to xml (breadcastSendPort)
+					
+					DatagramSocket dSocket = new DatagramSocket(4575);
+					DatagramPacket reply = new DatagramPacket(buffer,
+							buffer.length, ia, RDFSProperties.getBroadcastPort());
+					dSocket.send(reply);
+					dSocket.close();
+					
+					
+					
 					Log.me(this, "Sending Packet: " + new String(dp.getData(),0,dp.getLength()));
 				}
-			} catch (UnknownHostException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			} catch (Exception e) {
+				Log.me(this, "Error while sending imAlive packet: " + e.toString());
 			}
 
 		}
 
 	}
 }
-

@@ -2,7 +2,6 @@ package network;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InvalidClassException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
@@ -17,6 +16,7 @@ import java.util.zip.Checksum;
 
 import common.Log;
 import common.RDFSProperties;
+import common.rdfs;
 import fileSystem.FileSystemController;
 
 import nodeDirectory.DirectoryController;
@@ -35,6 +35,7 @@ public class NetworkController {
 
 	//ThreadControll
 	public boolean runListener = true;  //don't modify!!!!!!
+	public boolean runImAliveThread = true;
 
 	private NetworkController() {
 	}
@@ -51,12 +52,14 @@ public class NetworkController {
 	/**
 	 * Starts the Broadcast Listener
 	 */
-	public void startListener()
+	public Thread startListener()
 	{
 		Log.me(this, "Starting Broadcast Listener");
 		nc.runListener = true;
 		BroadcastListener bl = new BroadcastListener(NetworkController.getInstance());
-		new Thread(bl).start();
+		Thread t =  new Thread(bl);
+		t.start();
+		return t;
 	}
 	/**
 	 * Stops the Broadcast Listener
@@ -65,6 +68,22 @@ public class NetworkController {
 	{
 		Log.me(this, "Stoping Broadcast Listener");
 		nc.runListener = false;
+	}
+	
+	public Thread startImAliveThread()
+	{
+		Log.me(this, "Starting ImAliveThread");
+		nc.runImAliveThread = true;
+		imAliveThread iat = new imAliveThread(NetworkController.getInstance());
+		Thread t =  new Thread(iat);
+		t.start();
+		return t;
+		
+	}
+	public void stopImAliveThread()
+	{
+		Log.me(this, "Stopping ImAliveThread");
+		nc.runImAliveThread = false;
 	}
 
 
@@ -82,8 +101,12 @@ public class NetworkController {
 			//Im alive packet format: imAlive@UUID
 			if(split[0].equals("imAlive"))
 			{
-				Node n = new Node(UUID.fromString(split[1]));
-				this.DC.getNodeDirectory().addNode(n);
+				UUID uuid = UUID.fromString(split[1]);
+				if(!uuid.equals(rdfs.uuid))
+				{
+					Node n = new Node(uuid);
+					this.DC.getNodeDirectory().addNode(n);
+				}
 			}
 			//this is the request to save a file
 			//format: pSave@sizeBytes@UUID
@@ -114,7 +137,7 @@ public class NetworkController {
 						}
 						
 					}
-					else if(received instanceof byteObject)
+					else if(received instanceof ByteObject)
 					{
 						//TODO pablo: save file and return crc
 					}
@@ -126,31 +149,6 @@ public class NetworkController {
 			{
 				
 			}
-			//receiving file to be saved
-			//TODO vic: this methods shouldnt be here?? only broadcast?
-			/*if(split[0].equals("send"))
-			{
-
-				String[] sendSplit = split[1].split("@", 5);
-				String name = sendSplit[0];
-				int chunk = Integer.parseInt(sendSplit[1]);
-				long crc = Long.parseLong(sendSplit[2]);
-				int numBytes = Integer.parseInt(sendSplit[3]);
-				byte[] bytes = sendSplit[4].getBytes();
-
-				Checksum checksum = new CRC32();
-				checksum.update(bytes,0,bytes.length);
-				long lngChecksum = checksum.getValue();
-				if(crc == lngChecksum)
-				{
-					//TODO pablo: save file (FileSystemController)
-				}
-				else
-				{
-					//TODO vic: send response (failed)
-
-				}
-			}*/
 
 
 		}
