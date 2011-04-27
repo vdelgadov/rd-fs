@@ -41,21 +41,19 @@ public class BroadcastListener implements Runnable {
 								try {
 									byte[] buffer = new byte[65535];
 									DatagramPacket dp = new DatagramPacket(buffer, buffer.length);
-									ms.setSoTimeout(5000);
+									//ms.setSoTimeout(5000);
 									ms.receive(dp);
 									Log.me(this, "Received Packet: " + new String(dp.getData(),0,dp.getLength()));
 									nc.processPacket(dp);
 								}
 								catch(InterruptedIOException e)
 								{
-									ms.close();
 								}
 								catch(Exception e)
 								{
 									ms.close();
 									Log.me(this,"Error while listening for broadcasts" + e.getMessage());
 								}
-								return "hi";
 							}});
 							
 					executor.execute(future);
