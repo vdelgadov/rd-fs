@@ -188,8 +188,13 @@ public class FileTable implements Serializable {
 	 * 
 	 * @author Pavooou
 	 */
-	private class Entry
+	private class Entry implements Serializable
 	{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -3193901222438596755L;
+		
 		private UUID id;
 		private String filename;
 		private int chunkSequence;
