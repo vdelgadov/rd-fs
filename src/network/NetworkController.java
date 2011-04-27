@@ -6,6 +6,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -69,7 +70,7 @@ public class NetworkController {
 		Log.me(this, "Stoping Broadcast Listener");
 		nc.runListener = false;
 	}
-	
+
 	public Thread startImAliveThread()
 	{
 		Log.me(this, "Starting ImAliveThread");
@@ -78,7 +79,7 @@ public class NetworkController {
 		Thread t =  new Thread(iat);
 		t.start();
 		return t;
-		
+
 	}
 	public void stopImAliveThread()
 	{
@@ -97,7 +98,7 @@ public class NetworkController {
 			String message = new String(dp.getData(),0,dp.getLength());
 			String[] split = message.split("@", 2);
 			Log.me(this, "Proscessing packet: " + message);
-			
+
 			//Im alive packet format: imAlive@UUID
 			if(split[0].equals("imAlive"))
 			{
@@ -109,10 +110,10 @@ public class NetworkController {
 				}
 			}
 			//this is the request to save a file
-			//format: pSave@sizeBytes@UUID
+			//format: pSave@sizeBytes@UUID@fileName@chunk
 			else if(split[0].equals("pSave"))
 			{
-				
+
 				String[] saveSplit = split[1].split("@", 2);
 
 				int  bytes = Integer.parseInt(saveSplit[0]);
@@ -121,13 +122,13 @@ public class NetworkController {
 				if((int)this.FSC.getFreeSize() >= bytes)
 				{
 					InetAddress IPAddress = dp.getAddress();
-					
+
 					//Send Response format: rSave@UUID  (i can save the file)
 					TextObject to = new TextObject("rSaveMe@" + uuid);
 					this.sendObject(to);
-					
+
 					Object received = this.receiveObject(IPAddress);
-					
+
 					if(received instanceof TextObject)
 					{
 						TextObject text = (TextObject)received;
@@ -135,7 +136,7 @@ public class NetworkController {
 						{
 							Log.me(this, "Received drop petition");
 						}
-						
+
 					}
 					else if(received instanceof BytesObject)
 					{
@@ -147,7 +148,7 @@ public class NetworkController {
 			//Petition to send file
 			else if(split[0].equals("get"))
 			{
-				
+
 			}
 
 
@@ -187,42 +188,64 @@ public class NetworkController {
 	{
 		ServerSocket serverSocket = null;
 		try
-        {
+		{
 			serverSocket = new java.net.ServerSocket(RDFSProperties.getP2PPort());
-	        assert serverSocket.isBound();
-	        if (serverSocket.isBound())
-	        {
-	        	Log.me(this, "Sendig Object");
-	        }
-			 Socket sock = serverSocket.accept();
-	         OutputStream oStream = sock.getOutputStream();
-	         ObjectOutputStream ooStream = new ObjectOutputStream(oStream);
-	         ooStream.writeObject(obj);  // send serilized payload
-	         ooStream.close();
-	         return true;
-        }
-        catch (SecurityException e)
-        {
-        	Log.me(this,"Unable to get host address due to security. - " + e.toString());
-        	return false;
-        }
-        catch (IOException e)
-        {
-        	Log.me(this,"Unable to read data from an open socket. - " + e.toString());
-        	return false;
-        }
-        finally
-        {
-            try
-            {
-            	serverSocket.close();
-            }
-            catch (IOException e)
-            {
-            	Log.me(this,"Unable to close an open socket. - " + e.toString());
-                
-            }
-        }
+			assert serverSocket.isBound();
+			if (serverSocket.isBound())
+			{
+				Log.me(this, "Sendig Object");
+			}
+			Socket sock = serverSocket.accept();
+			OutputStream oStream = sock.getOutputStream();
+			ObjectOutputStream ooStream = new ObjectOutputStream(oStream);
+			ooStream.writeObject(obj);
+			ooStream.close();
+			return true;
+		}
+		catch (SecurityException e)
+		{
+			Log.me(this,"Unable to get host address due to security. - " + e.toString());
+			return false;
+		}
+		catch (IOException e)
+		{
+			Log.me(this,"Unable to read data from an open socket. - " + e.toString());
+			return false;
+		}
+		finally
+		{
+			try
+			{
+				serverSocket.close();
+			}
+			catch (IOException e)
+			{
+				Log.me(this,"Unable to close an open socket. - " + e.toString());
+
+			}
+		}
+	}
+	public boolean sendUDPMessage(byte[] buffer)
+	{
+		InetAddress ia;
+		try {
+			ia = InetAddress.getByName("224.0.0.205");
+			DatagramPacket dp = new DatagramPacket(buffer, buffer.length);
+
+			//TODO: vic: change port to xml (breadcastSendPort)
+			DatagramSocket dSocket = new DatagramSocket(4575);
+			DatagramPacket packet = new DatagramPacket(buffer,buffer.length, ia, RDFSProperties.getBroadcastPort());
+			dSocket.send(packet);
+			dSocket.close();
+
+			Log.me(this, "Sending Packet: " + new String(dp.getData(),0,dp.getLength()));
+			return true;
+
+		} catch (Exception e) {
+			Log.me(this, "Error while sending imAlive packet: " + e.toString());
+			return false;
+		}
+
 	}
 
 }
