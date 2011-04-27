@@ -87,7 +87,6 @@ public class NetworkController {
 		nc.runImAliveThread = false;
 	}
 
-
 	/**
 	 * This method will process all packets that are received via a broadcast.
 	 * @param dp
@@ -103,21 +102,23 @@ public class NetworkController {
 			if(split[0].equals("imAlive"))
 			{
 				UUID uuid = UUID.fromString(split[1]);
-				if(!uuid.equals(rdfs.uuid))
-				{
+				//if(!uuid.equals(rdfs.uuid))
+				//{
 					Node n = new Node(uuid);
 					this.DC.getNodeDirectory().addNode(n);
-				}
+				//}
 			}
 			//this is the request to save a file
 			//format: pSave@sizeBytes@UUID@fileName@chunk
 			else if(split[0].equals("pSave"))
 			{
 
-				String[] saveSplit = split[1].split("@", 2);
+				String[] saveSplit = split[1].split("@", 4);
 
 				int  bytes = Integer.parseInt(saveSplit[0]);
 				UUID uuid = UUID.fromString(saveSplit[1]);
+				String fileName = saveSplit[2];
+				int chunk = Integer.parseInt(saveSplit[3]);
 
 				if((int)this.FSC.getFreeSize() >= bytes)
 				{
@@ -156,6 +157,48 @@ public class NetworkController {
 		catch(Exception e)
 		{
 			Log.me(this, "Failed to Process Packet - " + e.toString());
+		}
+	}
+	public synchronized boolean saveFile(int sizeBytes, UUID uuid, String fileName, int chunk)
+	{
+		//format: pSave@sizeBytes@UUID@fileName@chunk
+		String str = "pSave@"+ sizeBytes + "@" + rdfs.uuid + "@" + fileName + "@" + chunk;
+		byte[] buffer = str.getBytes();
+		this.sendUDPMessage(buffer);
+		
+		//Receive Response format: rSave@UUID  (i can save the file)
+		TextObject to = new TextObject("rSaveMe@" + uuid);
+		this.sendObject(to);
+		this.receiveObject();
+		
+		
+		return false;
+	}
+	private Object receiveObject()
+	{
+		ServerSocket serversocket;
+		try
+		{
+			serversocket = new ServerSocket(RDFSProperties.getP2PPort());
+			Socket socket = serversocket.accept();
+			InputStream iStream = socket.getInputStream();
+			ObjectInputStream oiStream = new ObjectInputStream(iStream);
+			return oiStream.readObject();
+		}
+		catch (UnknownHostException e)
+		{
+			Log.me(this, "Failed to receive Object from host: - " + e.toString());
+			return null;
+		}
+		catch (IOException e)
+		{
+			Log.me(this, "Failed to receive Object  because of IO from host: - " + e.toString());
+			return null;
+		}
+		catch(ClassNotFoundException e)
+		{
+			Log.me(this, "Failed to receive Object  because of ClassNotFound from host: - " + e.toString());
+			return null;
 		}
 	}
 	private Object receiveObject(InetAddress IPAddress)
@@ -230,7 +273,6 @@ public class NetworkController {
 		InetAddress ia;
 		try {
 			ia = InetAddress.getByName("224.0.0.205");
-			DatagramPacket dp = new DatagramPacket(buffer, buffer.length);
 
 			//TODO: vic: change port to xml (breadcastSendPort)
 			DatagramSocket dSocket = new DatagramSocket(4575);
@@ -238,7 +280,7 @@ public class NetworkController {
 			dSocket.send(packet);
 			dSocket.close();
 
-			Log.me(this, "Sending Packet: " + new String(dp.getData(),0,dp.getLength()));
+			Log.me(this, "Sending Packet: " + new String(packet.getData(),0,packet.getLength()));
 			return true;
 
 		} catch (Exception e) {
