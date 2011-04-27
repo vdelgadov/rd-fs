@@ -37,19 +37,20 @@ public class rdfs {
 		}
 		
 		NetworkController nc = NetworkController.getInstance();
-		nc.startListener();
 		
-		
-		//this sleep is for debugging purposes - eliminate on final versions
-		/*
+		Thread bl = nc.startListener();
+		Thread iat = nc.startImAliveThread();
 		try {
-			Thread.sleep(5000);
+			bl.join();
 		} catch (InterruptedException e) {
-			e.printStackTrace();
+			Log.me(null, "Error on joining BroadcastListener Thread", Log.Priority.ERROR);
 		}
-		nc.stopListener();
-		Log.me(null, "RDFS terminating...");
-		*/
+		try {
+			iat.join();
+		} catch (InterruptedException e) {
+			Log.me(null, "Error on joining imAliveThread", Log.Priority.ERROR);
+		}
+		
 		
 	}
 	
