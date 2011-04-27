@@ -8,6 +8,7 @@ import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.io.RandomAccessFile;
 import java.util.UUID;
+import java.util.zip.CRC32;
 
 import common.Log;
 
@@ -175,6 +176,18 @@ public class FileSystemController {
 	{
 		Log.me(this, "Looking for file: "+ filename);
 		return ft.lookupByName(filename,chunkSeq) != null;
+	}
+	
+	public synchronized byte[] getFileData(UUID globalId, int offset, int maxData)
+	{
+		String filename = ft.lookupByGlobalUUID(globalId);
+		return getFileData(filename, offset, maxData);
+	}
+	
+	public synchronized byte[] getFileData(UUID globalId, int chunkSeq, int offset, int maxData)
+	{
+		String filename = ft.lookupByGlobalUUID(globalId);
+		return getFileData(filename, chunkSeq, offset, maxData);
 	}
 	
 	/**
@@ -385,6 +398,20 @@ public class FileSystemController {
 	{
 		File f = new File(FileSystemController.path);
 		return f.getFreeSpace();
+	}
+	
+	public long getCRCByGlobalUUID(UUID globalId)
+	{
+		CRC32 crc = new CRC32();
+		crc.update(getFileData(globalId, 0, 1000));
+		return crc.getValue();
+	}
+	
+	public long getCRCByGlobalUUID(UUID globalId, int chunkSeq)
+	{
+		CRC32 crc = new CRC32();
+		crc.update(getFileData(globalId, chunkSeq, 0, 1000));
+		return crc.getValue();
 	}
 	
 	private FileTable FileTableLookup()
