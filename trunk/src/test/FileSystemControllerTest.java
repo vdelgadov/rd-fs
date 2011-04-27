@@ -21,6 +21,7 @@ public class FileSystemControllerTest {
 	
 	final static String VALID_PATH = "C:\\Users\\Pavooou\\workspace\\mx.itesm.gda.rdfs\\tmp\\";
 	final static String VALID_FILENAME = "file.txt";
+	static UUID valid_global_uuid;
 	
 	final static String INVALID_PATH = "-0:\\dd\\";
 	
@@ -33,6 +34,7 @@ public class FileSystemControllerTest {
 		Log.me(null, "UNIT TEST STARTS:");
 		Log.me(null, "---------------------");
 		Log.me(null, "Starting FileSystemControllerTest");
+		valid_global_uuid = UUID.randomUUID();
 	}
 		
 	@Before
@@ -52,7 +54,7 @@ public class FileSystemControllerTest {
 	{
 		byte[] saved = "This data is needed to be saved".getBytes();
 		byte[] buffer;
-		fsc.saveNewFile("file.txt", 0, saved);
+		fsc.saveNewFile("file.txt", valid_global_uuid, 0, saved);
 		assertTrue(fsc.hasChunk("file.txt", 0));
 		buffer = fsc.getFileData("file.txt", 0, saved.length);
 		assertArrayEquals(saved, buffer);
@@ -68,19 +70,19 @@ public class FileSystemControllerTest {
 	{
 		byte[] saved = "This data is needed to be saved".getBytes();
 		fsc = FileSystemController.getInstance(INVALID_PATH);
-		fsc.saveNewFile("file.txt", 0, saved);
+		fsc.saveNewFile("file.txt", valid_global_uuid, 0, saved);
 		assertFalse(fsc.hasChunk("file.txt", 0));
 		assertNull(fsc.getFileData("file.txt", 0, saved.length));
 		
 		assertFalse(fsc.removeFile(UUID.randomUUID()));
 		
 		fsc = FileSystemController.getInstance(VALID_PATH);
-		fsc.saveNewFile("file.txt", 0, saved);
+		fsc.saveNewFile("file.txt", valid_global_uuid, 0, saved);
 		assertTrue(fsc.hasChunk("file.txt", 0));
 		
 		fsc = FileSystemController.getInstance(INVALID_PATH);
 		byte[] saved2 = "This data also needs to be saved".getBytes();
-		assertFalse(fsc.saveUpdatedFile("file.txt", 0, saved2));
+		assertFalse(fsc.saveUpdatedFile("file.txt", valid_global_uuid, 0, saved2));
 		
 		assertTrue(fsc.hasChunk("file.txt", 0));
 	}
@@ -96,12 +98,12 @@ public class FileSystemControllerTest {
 	{
 		byte[] saved = "This data is needed to be saved".getBytes();
 		byte[] buffer;
-		assertTrue(fsc.saveNewFile("file.txt", 0, saved));
+		assertTrue(fsc.saveNewFile("file.txt", valid_global_uuid, 0, saved));
 		assertTrue(fsc.hasChunk("file.txt", 0));
 		buffer = fsc.getFileData("file.txt", 0, saved.length);
 		assertArrayEquals(saved, buffer);
 		
-		assertFalse(fsc.saveNewFile("file.txt", 0, saved));
+		assertFalse(fsc.saveNewFile("file.txt", valid_global_uuid, 0, saved));
 		assertTrue(fsc.hasChunk("file.txt", 0));
 		byte[] buffer2 = fsc.getFileData("file.txt", 0, saved.length);
 		assertArrayEquals(saved, buffer2);
@@ -116,7 +118,7 @@ public class FileSystemControllerTest {
 	public void saveEmptyFile() throws Exception
 	{
 		byte[] saved = {};
-		fsc.saveNewFile("file.txt", 0, saved);
+		fsc.saveNewFile("file.txt", valid_global_uuid, 0, saved);
 		assertTrue(fsc.hasChunk("file.txt", 0));
 		byte [] buffer = fsc.getFileData("file.txt", 0, saved.length);
 		assertArrayEquals(saved, buffer);
@@ -132,13 +134,13 @@ public class FileSystemControllerTest {
 	{
 		byte[] saved = "This data is needed to be saved. FIRST CHUNK".getBytes();
 		byte[] buffer;
-		fsc.saveNewFile("file.txt", 0, saved);
+		fsc.saveNewFile("file.txt", valid_global_uuid, 0, saved);
 		assertTrue(fsc.hasChunk("file.txt", 0));
 		buffer = fsc.getFileData("file.txt", 0, 0, saved.length);
 		assertArrayEquals(saved, buffer);
 		byte[] saved2 = "This data is needed to be saved. SECOND CHUNK.".getBytes();
 		byte[] buffer2;
-		fsc.saveNewFile("file.txt", 1, saved2);
+		fsc.saveNewFile("file.txt", valid_global_uuid, 1, saved2);
 		assertTrue(fsc.hasChunk("file.txt", 1));
 		buffer2 = fsc.getFileData("file.txt", 1, 0, saved2.length);
 		assertArrayEquals(saved2, buffer2);
@@ -157,13 +159,13 @@ public class FileSystemControllerTest {
 	{
 		byte[] saved = "This data is needed to be saved. FIRST CHUNK".getBytes();
 		byte[] buffer;
-		fsc.saveNewFile("file.txt", 0, saved);
+		fsc.saveNewFile("file.txt", valid_global_uuid, 0, saved);
 		assertTrue(fsc.hasChunk("file.txt", 0));
 		buffer = fsc.getFileData("file.txt", 0, 0, saved.length);
 		assertArrayEquals(saved, buffer);
 		byte[] saved2 = "This data is needed to be saved. SECOND CHUNK.".getBytes();
 		byte[] buffer2;
-		fsc.saveNewFile("file.txt", 1, saved2);
+		fsc.saveNewFile("file.txt", valid_global_uuid, 1, saved2);
 		assertTrue(fsc.hasChunk("file.txt", 1));
 		buffer2 = fsc.getFileData("file.txt", 1, 0, saved2.length);
 		assertArrayEquals(saved2, buffer2);
@@ -174,14 +176,14 @@ public class FileSystemControllerTest {
 		byte[] saved4 = "This data is needed to be saved. THIRD CHUNK".getBytes();
 		byte[] buffer4;
 		assertTrue(fsc.hasChunk("file.txt", 0));
-		fsc.saveUpdatedFile("file.txt", 0, saved4);
+		fsc.saveUpdatedFile("file.txt", valid_global_uuid, 0, saved4);
 		assertTrue(fsc.hasChunk("file.txt", 0));
 		buffer4 = fsc.getFileData("file.txt", 0, 0, saved4.length);
 		assertArrayEquals(saved4, buffer4);
 		byte[] saved5 = "This data is needed to be saved. FOURTH CHUNK.".getBytes();
 		byte[] buffer5;
 		assertTrue(fsc.hasChunk("file.txt", 1));
-		fsc.saveUpdatedFile("file.txt", 1, saved5);
+		fsc.saveUpdatedFile("file.txt", valid_global_uuid, 1, saved5);
 		assertTrue(fsc.hasChunk("file.txt", 1));
 		buffer5 = fsc.getFileData("file.txt", 1, 0, saved5.length);
 		assertArrayEquals(saved5, buffer5);
@@ -201,13 +203,13 @@ public class FileSystemControllerTest {
 	{
 		byte[] saved = "This data is needed to be saved. FIRST CHUNK".getBytes();
 		byte[] buffer;
-		assertTrue(fsc.saveNewFile("file.txt", 0, saved));
+		assertTrue(fsc.saveNewFile("file.txt", valid_global_uuid, 0, saved));
 		assertTrue(fsc.hasChunk("file.txt", 0));
 		buffer = fsc.getFileData("file.txt", 0, 0, saved.length);
 		assertArrayEquals(saved, buffer);
 		byte[] saved2 = "This data is needed to be saved. SECOND CHUNK.".getBytes();
 		byte[] buffer2;
-		assertTrue(fsc.saveNewFile("file.txt", 1, saved2));
+		assertTrue(fsc.saveNewFile("file.txt", valid_global_uuid, 1, saved2));
 		assertTrue(fsc.hasChunk("file.txt", 1));
 		buffer2 = fsc.getFileData("file.txt", 1, 0, saved2.length);
 		assertArrayEquals(saved2, buffer2);
@@ -241,13 +243,13 @@ public class FileSystemControllerTest {
 	{
 		byte[] saved = "This data is needed to be saved. FIRST CHUNK".getBytes();
 		byte[] buffer;
-		assertTrue(fsc.saveNewFile("file.txt", 0, saved));
+		assertTrue(fsc.saveNewFile("file.txt", valid_global_uuid, 0, saved));
 		assertTrue(fsc.hasChunk("file.txt", 0));
 		buffer = fsc.getFileData("file.txt", 0, 0, saved.length);
 		assertArrayEquals(saved, buffer);
 		byte[] saved2 = "This data is needed to be saved. SECOND CHUNK.".getBytes();
 		byte[] buffer2;
-		assertTrue(fsc.saveNewFile("file.txt", 1, saved2));
+		assertTrue(fsc.saveNewFile("file.txt", valid_global_uuid, 1, saved2));
 		assertTrue(fsc.hasChunk("file.txt", 1));
 		buffer2 = fsc.getFileData("file.txt", 1, 0, saved2.length);
 		assertArrayEquals(saved2, buffer2);
@@ -293,7 +295,7 @@ public class FileSystemControllerTest {
 	public void lookupForFile() throws Exception
 	{
 		byte[] saved = "This data is needed to be saved".getBytes();
-		fsc.saveNewFile("file.txt", 0, saved);
+		fsc.saveNewFile("file.txt", valid_global_uuid, 0, saved);
 		assertTrue(fsc.hasFile("file.txt"));
 	}
 

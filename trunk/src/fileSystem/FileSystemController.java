@@ -73,7 +73,7 @@ public class FileSystemController {
 	 * @return true if saved correctly, false otherwise
 	 * @throws Exception if data sent is null, or if chunkSeq is less than 0
 	 */
-	public synchronized boolean saveNewFile(String filename, int chunkSeq, byte[] data) throws Exception
+	public synchronized boolean saveNewFile(String filename, UUID globalId, int chunkSeq, byte[] data) throws Exception
 	{
 		Log.me(this, "Saving new file to Local File System: "+ filename);
 		if (ft.lookupByName(filename,chunkSeq) != null) 
@@ -84,7 +84,7 @@ public class FileSystemController {
 		if (data == null) { throw new Exception("Data is null"); }
 		if (chunkSeq < 0) { throw new Exception("chunkSeq is Zero."); };
 		if (data.length == 0) { Log.me(this, "Data to be saved is going to be of zero length", Log.Priority.WARNING); }
-		UUID fileId = ft.addExistingFile(filename, chunkSeq);
+		UUID fileId = ft.addExistingFile(filename, globalId, chunkSeq);
 		FileOutputStream receivingFS = null;
 		try {
 			receivingFS = new FileOutputStream(path + fileId.toString());
@@ -114,11 +114,11 @@ public class FileSystemController {
 	 * @param data an array with bytes of the file
 	 * @return true if saved correctly, false otherwise
 	 */
-	public synchronized boolean saveUpdatedFile(String filename, int chunkSeq, byte[] data)
+	public synchronized boolean saveUpdatedFile(String filename, UUID globalId, int chunkSeq, byte[] data)
 	{
 		Log.me(this, "Saving updated file to Local File System: "+ filename);
 		UUID existingFileId = ft.lookupByName(filename);
-		UUID fileId = ft.addExistingFile(filename, chunkSeq);
+		UUID fileId = ft.addExistingFile(filename, globalId, chunkSeq);
 		FileOutputStream receivingFS = null;
 		try {
 			receivingFS = new FileOutputStream(path + fileId.toString());
@@ -324,7 +324,7 @@ public class FileSystemController {
 	/**
 	 * Removes physically and logically the file defined with a Unique Id from the file system.
 	 * 
-	 * @param fileId Unique Id of the chunk to remove
+	 * @param fileId Local unique Id of the chunk to remove
 	 * @return true if removed correctly, false otherwise
 	 */
 	public synchronized boolean removeFile(UUID fileId)
