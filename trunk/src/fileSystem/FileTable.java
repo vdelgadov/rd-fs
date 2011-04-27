@@ -116,14 +116,14 @@ public class FileTable implements Serializable {
 	 * @param globalUUID of the file to be looked for
 	 * @return local UUID assigned to that file, null if not found
 	 */
-	public UUID lookupByGlobalUUID(UUID globalUUID)
+	public String lookupByGlobalUUID(UUID globalUUID)
 	{
 		Log.me(this, "Looking up for file with global UUID: "+ globalUUID.toString());
 		for (Entry entry : entries) 
 		{
 			if (entry.getGlobalId().equals(globalUUID))
 			{
-				return entry.getLocalId();
+				return entry.getFilename();
 			}
 		}
 		Log.me(this, "File could not be found: "+ globalUUID.toString(),Log.Priority.WARNING);
