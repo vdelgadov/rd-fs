@@ -34,7 +34,7 @@ public class NetworkController {
 
 	FileSystemController FSC = FileSystemController.getInstance("");
 	DirectoryController DC = new DirectoryController();
-
+	private ArrayList<DatagramPacket> UDPMessages = new ArrayList<DatagramPacket>();
 
 	static NetworkController nc;
 
@@ -132,23 +132,25 @@ public class NetworkController {
 
 					//Send Response format: rSave@UUID  (i can save the file)
 					TextObject to = new TextObject("rSaveMe@" + uuid);
-					//this.sendObject(to);
+					sendObjectDirectly(IPAddress, to);
 
-					Object received = this.receiveObject(IPAddress);
-
-					if(received instanceof TextObject)
+					ArrayList<Object[]> list = this.receiveObjectsByPetition(1);
+					if(list == null || list.size() != 1)
 					{
-						TextObject text = (TextObject)received;
-						if(text.getText().equals("Drop"))
-						{
-							Log.me(this, "Received drop petition");
-						}
+						//TODO abort
+						return;
+					}
 
-					}
-					else if(received instanceof BytesObject)
+					Object[] obj = list.get(1);
+					if(obj[1] instanceof BytesObject)
 					{
-						//TODO pablo: save file and return crc
+						TextObject text = (TextObject)obj[1];
+						//TODO pablo: save file and return crc obj[0]->file
+						TextObject ack = new TextObject("ACK");
+						this.sendObjectDirectly(IPAddress, ack);
+						Log.me(this, "File saved ");
 					}
+					
 
 				}
 			}
@@ -163,10 +165,10 @@ public class NetworkController {
 			Log.me(this, "Failed to Process Packet - " + e.toString());
 		}
 	}
-	public synchronized boolean saveFile(int sizeBytes, UUID uuid, String fileName, int chunk, int numNodes)
+	public synchronized boolean saveFile(int sizeBytes, UUID uuid, String fileName, int chunk, int numNodes, Object file)
 	{
 		//format: pSave@sizeBytes@UUID@fileName@chunk
-		String str = "pSave@"+ sizeBytes + "@" + rdfs.uuid + "@" + fileName + "@" + chunk;
+		String str = "pSave@"+ sizeBytes + "@" + uuid + "@" + fileName + "@" + chunk;
 		byte[] buffer = str.getBytes();
 		this.sendUDPMessage(buffer);
 
@@ -175,7 +177,7 @@ public class NetworkController {
 		//this.sendObject(to);
 
 		//TODO the parameter in the next function should be the number of nodes required to save the file
-		ArrayList<Object[]> list = this.receiveObject(numNodes);
+		ArrayList<Object[]> list = this.receiveObjectsByPetition(numNodes);
 		if(list == null || list.size() < numNodes)
 		{
 			return false;
@@ -195,8 +197,24 @@ public class NetworkController {
 		//send file to hosts
 		for(int i = 0; i< numNodes; i++ )
 		{
+			Object[] obj = list.get(i);
+			//send the object
+			if (!sendObjectDirectly((InetAddress)obj[0], file))
+			{
+				//TODO abort
+			}
+			Object ack= this.receiveObjectDirectly((InetAddress)obj[0]);
+			if(  (ack instanceof TextObject) && ( ((TextObject) ack).getText().equals("ACK") )  )
+			{
+				
+			}
+			else
+			{
+				//TODO abort
+			}
 			
 		}
+		Log.me(this, "file saved uuid: " + uuid.toString());
 
 
 
@@ -208,16 +226,17 @@ public class NetworkController {
 	 * @param numObjects
 	 * @return
 	 */
-	public ArrayList<Object[]> receiveObject(int numObjects)
+	public ArrayList<Object[]> receiveObjectsByPetition(int numObjects)
 	{
 		ArrayList<Object[]> list = new ArrayList<Object[]>();
 		ServerSocket serversocket = null;
+		Socket socket = null;
 		try
 		{
 			serversocket = new ServerSocket(RDFSProperties.getP2PPort());
 			for(int i = 0; i < numObjects;i++)
 			{
-				Socket socket = serversocket.accept();
+				socket = serversocket.accept();
 				socket.setSoTimeout(5000);
 				InputStream iStream = socket.getInputStream();
 				ObjectInputStream oiStream = new ObjectInputStream(iStream);
@@ -227,7 +246,6 @@ public class NetworkController {
 				list.add( tmp );
 				socket.close();
 			}
-			serversocket.close();
 			return list;
 		}
 		catch (UnknownHostException e)
@@ -248,12 +266,19 @@ public class NetworkController {
 		finally
 		{
 			try {
-				serversocket.close();
+				if(serversocket != null)
+				{
+					serversocket.close();
+				}
+				if(socket != null)
+				{
+					socket.close();
+				}
 			} catch (IOException e) {
 			}
 		}
 	}
-	public Object receiveObject(InetAddress IPAddress)
+	public Object receiveObjectDirectly(InetAddress IPAddress)
 	{
 		Socket socket;
 		try
@@ -277,37 +302,6 @@ public class NetworkController {
 		{
 			Log.me(this, "Failed to receive Object  because of ClassNotFound from host: " + IPAddress  + " - " + e.toString());
 			return null;
-		}
-	}
-	public boolean sendObject(InetAddress IPAddress, Object obj)
-	{
-		Socket socket = null;
-		try
-		{
-			socket = new Socket(IPAddress, RDFSProperties.getP2PPort());
-			OutputStream oStream = socket.getOutputStream();
-			ObjectOutputStream ooStream = new ObjectOutputStream(oStream);
-			ooStream.writeObject(obj);
-			ooStream.close();
-			return true;
-		}
-		catch (UnknownHostException e)
-		{
-			Log.me(this, "Failed to receive Object from host: " + IPAddress  + " - " + e.toString());
-			return false;
-		}
-		catch (IOException e)
-		{
-			Log.me(this, "Failed to receive Object  because of IO from host: " + IPAddress  + " - " + e.toString());
-			return false;
-		}
-		finally
-		{
-			try {
-				socket.close();
-			} catch (IOException e) {
-				
-			}
 		}
 	}
 	public boolean sendObjectByPetition(Object obj)
@@ -356,6 +350,37 @@ public class NetworkController {
 			}
 		}
 	}
+	public boolean sendObjectDirectly(InetAddress IPAddress, Object obj)
+    {
+            Socket socket = null;
+            try
+            {
+                    socket = new Socket(IPAddress, RDFSProperties.getP2PPort());
+                    OutputStream oStream = socket.getOutputStream();
+                    ObjectOutputStream ooStream = new ObjectOutputStream(oStream);
+                    ooStream.writeObject(obj);
+                    ooStream.close();
+                    return true;
+            }
+            catch (UnknownHostException e)
+            {
+                    Log.me(this, "Failed to receive Object from host: " + IPAddress  + " - " + e.toString());
+                    return false;
+            }
+            catch (IOException e)
+            {
+                    Log.me(this, "Failed to receive Object  because of IO from host: " + IPAddress  + " - " + e.toString());
+                    return false;
+            }
+            finally
+            {
+                    try {
+                            socket.close();
+                    } catch (IOException e) {
+                            
+                    }
+            }
+    }
 	public boolean sendUDPMessage(byte[] buffer)
 	{
 		InetAddress ia;
@@ -372,10 +397,21 @@ public class NetworkController {
 			return true;
 
 		} catch (Exception e) {
-			Log.me(this, "Error while sending imAlive packet: " + e.toString());
+			Log.me(this, "Error while sending UDP Message: " + new String(buffer) + " - " + e.toString());
 			return false;
 		}
 
+	}
+
+	public void xaddUDPMessages(DatagramPacket dp) {
+		UDPMessages.add(dp);
+	}
+
+	public DatagramPacket xgetUDPMessage() {
+		DatagramPacket dp = UDPMessages.get(0);
+		UDPMessages.remove(0);
+		return dp;
+		
 	}
 
 }

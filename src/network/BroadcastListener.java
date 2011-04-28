@@ -66,6 +66,7 @@ public class BroadcastListener implements Runnable {
 								ms.receive(dp);
 								Log.me(this, "Received Packet: " + new String(dp.getData(),0,dp.getLength()));
 								nc.processPacket(dp);
+								//nc.addUDPMessages(dp);
 							}
 							catch(InterruptedIOException e)
 							{
