@@ -29,7 +29,7 @@ public class NetworkControllerTest {
 	@Test
 	public void one()
 	{
-		NetworkController nc;
+		/*NetworkController nc;
 		try {
 			Log.init(Priority.DEBUG);
 			nc = NetworkController.getInstance();
@@ -44,6 +44,7 @@ public class NetworkControllerTest {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		*/
 		
 	}
 }

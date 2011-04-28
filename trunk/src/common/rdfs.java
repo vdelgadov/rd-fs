@@ -15,6 +15,7 @@ import java.net.UnknownHostException;
 import java.util.UUID;
 
 import network.NetworkController;
+import network.entities.BytesObject;
 import network.entities.TextObject;
 
 
@@ -43,15 +44,15 @@ public class rdfs {
 		
 		NetworkController nc = NetworkController.getInstance();
 		
-		/*
+		
 		Thread bl = nc.startListener();
-		Thread iat = nc.startImAliveThread();
+		//Thread iat = nc.startImAliveThread();
 		try {
 			bl.join();
 		} catch (InterruptedException e) {
 			Log.me(null, "Error on joining BroadcastListener Thread", Log.Priority.ERROR);
 		}
-		try {
+		/*try {
 			iat.join();
 		} catch (InterruptedException e) {
 			Log.me(null, "Error on joining imAliveThread", Log.Priority.ERROR);
@@ -59,53 +60,14 @@ public class rdfs {
 		*/
 		
 		
-		//tester
-		/*
-		try {
-			InetAddress ip = InetAddress.getByName("192.168.2.5");
-			TextObject sendObject = new TextObject("hi");
-			nc.sendObject(ip, sendObject);
-		} catch (UnknownHostException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
+		//tester1
+
 		
 		//tester2
-		/*
-		Object obj;
-		try {
-			obj = nc.receiveObject(InetAddress.getLocalHost());
-			if(obj != null)
-			{
-				System.out.println("cool! received something");
-			}
-			else
-			{
-				System.out.println("received null");
-			}
-			if(obj instanceof TextObject)
-			{
-				System.out.println("cool! is the instance");
-			}
-			else
-			{
-				System.out.println("grrr1");
-			}
-			if(((TextObject)obj).getText().equals("hi"))
-			{
-				System.out.println("cool! is the object");
-			}
-			else
-			{
-				System.out.println("grrr2");
-			}
-		} catch (UnknownHostException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		/*BytesObject obj = new BytesObject("ojojo".getBytes());
+		boolean b = nc.saveFile(obj.getBytes().length, UUID.randomUUID(), "test.txt", 0, 1, obj);
+		System.out.println(b);
 		*/
-		
 	}
 	
 	/**
