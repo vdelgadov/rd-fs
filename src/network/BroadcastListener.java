@@ -64,8 +64,11 @@ public class BroadcastListener implements Runnable {
 								DatagramPacket dp = new DatagramPacket(buffer, buffer.length);
 								ms.setSoTimeout(5000);
 								ms.receive(dp);
-								Log.me(this, "Received Packet: " + new String(dp.getData(),0,dp.getLength()));
-								nc.processPacket(dp);
+								if (!dp.getAddress().equals(InetAddress.getLocalHost()))
+								{
+									Log.me(this, "Received Packet: " + new String(dp.getData(),0,dp.getLength()));
+									nc.processPacket(dp);
+								}
 								//nc.addUDPMessages(dp);
 							}
 							catch(InterruptedIOException e)
