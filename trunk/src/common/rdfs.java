@@ -48,10 +48,10 @@ public class rdfs {
 		Thread bl = nc.startListener();
 		
 		//tester2
-		BytesObject obj = new BytesObject("ojojo".getBytes());
+		/*BytesObject obj = new BytesObject("ojojo".getBytes());
 		boolean b = nc.saveFile(obj.getBytes().length, UUID.randomUUID(), "test.txt", 0, 1, obj);
 		System.out.println(b);
-		
+		*/
 		//Thread iat = nc.startImAliveThread();
 		try {
 			bl.join();
