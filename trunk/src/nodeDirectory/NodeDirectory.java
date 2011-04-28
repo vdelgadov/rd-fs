@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.LinkedList;
 
 import common.Log;
+import fileSystem.FileTable;
 
 public class NodeDirectory {
 	private LinkedList<Node> nodes = new LinkedList<Node>();
@@ -31,7 +32,7 @@ public class NodeDirectory {
 		}
 		else
 		{
-			this.nodeUpdating(node);
+			this.nodeAlive(node);
 		}
 	}
 
@@ -49,7 +50,7 @@ public class NodeDirectory {
 		Log.me(this, "Node not found to be removed: "+ node.uuid.toString());
 	}
 
-	public synchronized void nodeUpdating(Node node)
+	public synchronized void nodeAlive(Node node)
 	{
 		Node x =  null;
 		for (Node tmpNode : nodes) 
@@ -72,24 +73,18 @@ public class NodeDirectory {
 		}
 	}
 	
-	//check this code!
+	// Should be called every I am Alive message is sent.
 	public synchronized void update()
 	{
-		boolean clear = true;
-		while (clear)
+		for(Node n : nodes)
 		{
-			for(int i = 0; i<nodes.size(); i++)
-			{
-				Date lastUpdatePlusOffset = new Date(nodes.get(i).lastUpdate.getTime()+ this.timeToDeleteNode);
+			Date lastUpdatePlusOffset = new Date(n.lastUpdate.getTime()+ this.timeToDeleteNode);
 
-				if( lastUpdatePlusOffset.before(new Date() ))
-				{
-					nodes.get(i).setActive(false);
-					Log.me(this, "Removing node due to inactivity: " + nodes.get(i).uuid.toString());
-					break;
-				}
+			if( lastUpdatePlusOffset.before(new Date() ))
+			{
+				n.setActive(false);
+				Log.me(this, "Removing node due to inactivity: " + n.uuid.toString());
 			}
-			clear = false;
 		}
 
 	}

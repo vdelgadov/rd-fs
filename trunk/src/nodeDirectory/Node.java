@@ -2,10 +2,13 @@ package nodeDirectory;
 import java.util.Date;
 import java.util.UUID;
 
+import fileSystem.FileTable;
+
 
 public class Node {
 	UUID uuid;
 	Date lastUpdate;
+	FileTable ft;
 	private boolean active;
 	
 	
@@ -14,6 +17,7 @@ public class Node {
 		this.uuid = uuid;
 		this.lastUpdate = new Date();
 		this.setActive(true);
+		this.ft = null;
 	}
 	
 	@Override
@@ -38,12 +42,27 @@ public class Node {
 		}
 		
 	}
+	
+	public UUID getUUID()
+	{
+		return uuid;
+	}
+	
+	public FileTable getFileTable()
+	{
+		return this.ft;
+	}
+	
+	public void setFileTable(FileTable ft)
+	{
+		this.ft = ft;
+	}
 
-	void setActive(boolean active) {
+	public void setActive(boolean active) {
 		this.active = active;
 	}
 
-	boolean isActive() {
+	public boolean isActive() {
 		return active;
 	}
 }

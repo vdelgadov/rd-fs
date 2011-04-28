@@ -32,7 +32,7 @@ import network.entities.*;
  */
 public class NetworkController {
 
-	FileSystemController FSC = FileSystemController.getInstance("");
+	FileSystemController FSC = FileSystemController.getInstance("./tmp/");
 	DirectoryController DC = new DirectoryController();
 	private ArrayList<DatagramPacket> UDPMessages = new ArrayList<DatagramPacket>();
 
@@ -141,11 +141,11 @@ public class NetworkController {
 						return;
 					}
 
-					Object[] obj = list.get(1);
+					Object[] obj = list.get(0);
 					if(obj[1] instanceof BytesObject)
 					{
-						TextObject text = (TextObject)obj[1];
-						//TODO pablo: save file and return crc obj[0]->file
+						BytesObject data = (BytesObject)obj[1];
+						FSC.saveNewFile(fileName, uuid, chunk, data.getBytes());
 						TextObject ack = new TextObject("ACK");
 						this.sendObjectDirectly(IPAddress, ack);
 						Log.me(this, "File saved ");
@@ -203,10 +203,10 @@ public class NetworkController {
 			{
 				//TODO abort
 			}
-			Object ack= this.receiveObjectDirectly((InetAddress)obj[0]);
-			if(  (ack instanceof TextObject) && ( ((TextObject) ack).getText().equals("ACK") )  )
+			ArrayList<Object[]> ack= this.receiveObjectsByPetition(1);
+			if(  (ack.get(0)[1] instanceof TextObject) && ( ((TextObject) ack.get(0)[1]).getText().equals("ACK") )  )
 			{
-				
+				return true;
 			}
 			else
 			{
