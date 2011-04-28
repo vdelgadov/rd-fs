@@ -10,19 +10,35 @@ import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.RandomAccessFile;
 import java.util.UUID;
 
-import network.NetworkController;
+import javax.swing.DefaultListModel;
+import javax.swing.JFileChooser;
+import javax.swing.ListSelectionModel;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 
-public class rdfsController implements ActionListener {
+import network.NetworkController;
+import network.entities.BytesObject;
+import nodeDirectory.DirectoryController;
+
+public class rdfsController implements ActionListener, ListSelectionListener {
 
 	private rdfsGui gui;
 	private NetworkController nc;
-	private UUID uuid;
+	public static UUID uuid;
+	
+	private String fileSelected = null;
+	
+	private DirectoryController dc;
 	
 	public static final String EXIT_ITEM_ACTION_COMMAND = "Exit";
 	public static final String JOIN_SYSTEM_ITEM_ACTION_COMMAND = "Join";
 	public static final String CONNECT_USER_ITEM_ACTION_COMMAND = "Connect";
+	public static final String DELETE_BUTTON_ACTION_COMMAND = "Delete";
+	public static final String UPLOAD_BUTTON_ACTION_COMMAND = "Upload";
+	public static final String DOWNLOAD_BUTTON_ACTION_COMMAND = "Download";
 	public static final String DISCONNECT_ITEM_ACTION_COMMAND = "Disconnect";
 	
 	public static final String UUID_FILENAME = "uuid"; 
@@ -30,7 +46,7 @@ public class rdfsController implements ActionListener {
 	public rdfsController(rdfsGui gui)
 	{
 		Log.init(Log.Priority.DEBUG);
-		
+		dc = DirectoryController.getInstance();
 		this.gui = gui;
 	}
 	
@@ -44,7 +60,7 @@ public class rdfsController implements ActionListener {
 	public void actionPerformed(ActionEvent arg0) {
 		if (arg0.getActionCommand().equals(EXIT_ITEM_ACTION_COMMAND))
 		{
-			gui.dispose();			
+			gui.dispose();
 			return;
 		}
 		if (arg0.getActionCommand().equals(DISCONNECT_ITEM_ACTION_COMMAND))
@@ -57,6 +73,8 @@ public class rdfsController implements ActionListener {
 		{
 			gui.changeStatus("Connected to file system, server mode.");
 			gui.activateAll();
+			gui.toggleButtons(false);
+			gui.toggleUploadButton(true);
 			gui.connect();
 			
 			initServerMode();
@@ -67,7 +85,73 @@ public class rdfsController implements ActionListener {
 		{
 			gui.changeStatus("Connected to file system, user mode.");
 			gui.activateAll();
+			gui.toggleButtons(false);
+			gui.toggleUploadButton(true);
 			gui.connect();
+			return;
+		}
+		if (arg0.getActionCommand().equals(UPLOAD_BUTTON_ACTION_COMMAND))
+		{
+			int returnVal = gui.showOpenDialog();
+
+	        if (returnVal == JFileChooser.APPROVE_OPTION) {
+	            File file = gui.getSelectedFile();
+	            //This is where a real application would open the file.
+	            Log.me(this,"Uploading: " + file.getName() + ".");
+	            
+	            byte[] data = getLocalFileData(file);
+	            BytesObject obj = new BytesObject(data);
+	            UUID fileUuid = UUID.randomUUID();
+	            
+	            gui.changeStatus("Uploading file to system.");
+	            boolean saved = nc.saveFile(data.length, fileUuid, file.getName(), 0, 1, obj);
+	            if (saved)
+	            {
+	            	((DefaultListModel)gui.getFileList().getModel()).addElement(file.getName());
+	            	
+	            	gui.changeStatus("Uploaded completed succesfully");
+	            }
+	            else
+	            {
+	            	gui.changeStatus("Upload failed");
+	            }
+	        } else {
+	            Log.me(this,"Open command cancelled by user.");
+	        }
+			
+			return;
+		}
+		if (arg0.getActionCommand().equals(DOWNLOAD_BUTTON_ACTION_COMMAND))
+		{
+			int returnVal = gui.showSaveDialog();
+
+	        if (returnVal == JFileChooser.APPROVE_OPTION) {
+	            File file = gui.getSelectedFile();
+	            
+	            UUID fileUuid = dc.getNodeDirectory().getUuidFromFileName(fileSelected);
+	            
+	            nc.getFile(fileUuid, fileSelected, 0);
+	            
+	            Log.me(this,"Downloading: " + file.getName() + ".");
+	        } else {
+	            Log.me(this,"Upload command cancelled by user.");
+	        }
+			gui.changeStatus("Downloading file to local fs.");
+			return;
+		}
+		if (arg0.getActionCommand().equals(DELETE_BUTTON_ACTION_COMMAND))
+		{
+			UUID fileUuid = dc.getNodeDirectory().getUuidFromFileName(fileSelected);
+			int r = nc.deleteFile(fileUuid, fileSelected, 0);
+			if (r == 1)
+			{
+				gui.changeStatus("Deleted file.");
+			}
+			else
+			{
+				gui.changeStatus("Couldn't delete file.");
+			}
+			
 			return;
 		}
 	}
@@ -81,13 +165,21 @@ public class rdfsController implements ActionListener {
 		{
 			Log.me(null, "Error obtaining or generating UUID", Log.Priority.ERROR);
 			gui.changeStatus("Error with UUID on this computer");
+			disconnect();
+			return;
 		}
 		
 		nc = NetworkController.getInstance();
+		
+		Thread bl = nc.startListener();
+		
+		Thread ia = nc.startImAliveThread();
 	}
 	
 	private void disconnect()
 	{
+		nc.stopImAliveThread();
+		nc.stopListener();
 		gui.disconnect();
 		gui.deactivateAll();
 	}
@@ -180,5 +272,63 @@ public class rdfsController implements ActionListener {
 				}
 		}
 		return uuid;
+	}
+	
+	private byte[] getLocalFileData(File file)
+	{
+		int fileSize  = new Long(file.length()).intValue();
+		byte[] buffer = new byte[fileSize];
+		RandomAccessFile fis = null;
+		try {
+			fis = new RandomAccessFile(file,"r");
+			
+			if (fis.read(buffer, 0, fileSize) != -1)
+			{
+				fis.close();
+				return  buffer;
+			}
+			else
+			{
+				fis.close();
+				return null;
+			}
+		}
+		catch (Exception e) 
+		{
+			Log.me(this, "Failed: "+ e.getMessage(), Log.Priority.ERROR);
+		}
+		finally 
+		{
+			if  (fis != null)
+				try{
+					fis.close();
+				}
+				catch(final Exception e)
+				{
+					Log.me(this, "Couldn't close the file accesor");
+				}
+		}
+		return null;
+	}
+
+	@Override
+	public void valueChanged(ListSelectionEvent e) {
+		ListSelectionModel lsm = (ListSelectionModel)e.getSource();
+		
+		if (lsm.isSelectionEmpty())
+		{
+			gui.toggleButtons(false);
+			gui.toggleUploadButton(true);
+			return;
+		}
+		gui.toggleButtons(true);
+		
+		int selected = e.getFirstIndex();	
+		fileSelected = (String)gui.getFileList().getModel().getElementAt(selected);
+	}
+	
+	public void stopAll()
+	{
+		disconnect();
 	}
 }

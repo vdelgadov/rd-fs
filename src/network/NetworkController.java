@@ -33,7 +33,7 @@ import network.entities.*;
 public class NetworkController {
 
 	FileSystemController FSC = FileSystemController.getInstance("./tmp/");
-	DirectoryController DC = new DirectoryController();
+	DirectoryController DC = DirectoryController.getInstance();
 	private ArrayList<DatagramPacket> UDPMessages = new ArrayList<DatagramPacket>();
 	private ArrayList<String> receivedMessages = new ArrayList<String>();
 
@@ -82,7 +82,7 @@ public class NetworkController {
 	{
 		Log.me(this, "Starting ImAliveThread");
 		nc.runImAliveThread = true;
-		imAliveThread iat = new imAliveThread(NetworkController.getInstance());
+		imAliveThread iat = new imAliveThread();
 		Thread t =  new Thread(iat);
 		t.start();
 		return t;

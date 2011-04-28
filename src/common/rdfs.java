@@ -48,29 +48,26 @@ public class rdfs {
 		Thread bl = nc.startListener();
 		
 		//tester2
-		/*BytesObject obj = new BytesObject("ojojo".getBytes());
+		BytesObject obj = new BytesObject("ojojo".getBytes());
 		UUID uuid = UUID.randomUUID();
-		boolean b = nc.saveFile(obj.getBytes().length, uuid, "test.txt", 0, 1, obj);
+		boolean b = nc.saveFile(obj.getBytes().length, uuid, "test.txt", 0, 2, obj);
 		System.out.println(b);
-
+		
 		BytesObject gObj = (BytesObject)nc.getFile(uuid, "test.txt", 0);
 		System.out.println(new String(gObj.getBytes()));
-
+		
 		if (b)
 		{
-		int r = nc.deleteFile(uuid, "test.txt", 1);
-		if (r == 1)
-		{
-		System.out.println("Success");
+			int r = nc.deleteFile(uuid, "test.txt", 2);
+			if (r == 1)
+			{
+				System.out.println("Success");
+			}
+			else
+			{
+				System.out.println("Failure");
+			}
 		}
-		else
-		{
-		System.out.println("Failure");
-		}
-		}*/
-		
-		//tester1
-
 		
 		//Thread iat = nc.startImAliveThread();
 		try {
@@ -78,6 +75,7 @@ public class rdfs {
 		} catch (InterruptedException e) {
 			Log.me(null, "Error on joining BroadcastListener Thread", Log.Priority.ERROR);
 		}
+		
 		/*try {
 			iat.join();
 		} catch (InterruptedException e) {
@@ -86,8 +84,8 @@ public class rdfs {
 		*/
 		
 		
-		
-		
+		//tester1
+
 		
 
 		

@@ -2,6 +2,7 @@ package network;
 
 import nodeDirectory.DirectoryController;
 import common.Log;
+import common.rdfsController;
 
 import common.rdfs;
 
@@ -9,10 +10,10 @@ public class imAliveThread implements Runnable {
 	NetworkController nc;
 	DirectoryController dc;
 
-	public imAliveThread(NetworkController nc)
+	public imAliveThread()
 	{
-		this.nc = nc;
-		//this.dc = dc;
+		this.nc = NetworkController.getInstance();
+		dc = DirectoryController.getInstance();
 	}
 
 	@Override
@@ -20,16 +21,16 @@ public class imAliveThread implements Runnable {
 		while(nc.runImAliveThread)
 		{
 
-			String str = "imAlive@" + rdfs.uuid;
+			String str = "imAlive@" + rdfsController.uuid;
 			byte[] buffer = str.getBytes();
 
-			while (nc.runListener) {
+			while (nc.runImAliveThread) {
 				try {
 					Thread.sleep(5000);
 				} catch (InterruptedException e) {
 					Log.me(this, "Error while trying to sleep in ImAliveThread - " + e.toString());
 				}
-				//this.dc.update();
+				this.dc.update();
 				this.nc.sendUDPMessage(buffer);
 			}
 
