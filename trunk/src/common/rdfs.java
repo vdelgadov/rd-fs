@@ -49,10 +49,28 @@ public class rdfs {
 		
 		//tester2
 		/*BytesObject obj = new BytesObject("ojojo".getBytes());
-		boolean b = nc.saveFile(obj.getBytes().length, UUID.randomUUID(), "test.txt", 0, 1, obj);
+		UUID uuid = UUID.randomUUID();
+		boolean b = nc.saveFile(obj.getBytes().length, uuid, "test.txt", 0, 1, obj);
 		System.out.println(b);
-		*/
+
+		BytesObject gObj = (BytesObject)nc.getFile(uuid, "test.txt", 0);
+		System.out.println(new String(gObj.getBytes()));
+
+		if (b)
+		{
+		int r = nc.deleteFile(uuid, "test.txt", 1);
+		if (r == 1)
+		{
+		System.out.println("Success");
+		}
+		else
+		{
+		System.out.println("Failure");
+		}
+		}*/
 		
+		//tester1
+
 		
 		//Thread iat = nc.startImAliveThread();
 		try {
@@ -68,8 +86,8 @@ public class rdfs {
 		*/
 		
 		
-		//tester1
-
+		
+		
 		
 
 		
