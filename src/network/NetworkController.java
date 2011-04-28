@@ -126,7 +126,7 @@ public class NetworkController {
 				String fileName = saveSplit[2];
 				int chunk = Integer.parseInt(saveSplit[3]);
 
-				if((int)this.FSC.getFreeSize() >= bytes)
+				if(this.FSC.getFreeSize() >= (long)bytes)
 				{
 					InetAddress IPAddress = dp.getAddress();
 
@@ -145,12 +145,21 @@ public class NetworkController {
 					if(obj[1] instanceof BytesObject)
 					{
 						BytesObject data = (BytesObject)obj[1];
-						FSC.saveNewFile(fileName, uuid, chunk, data.getBytes());
-						TextObject ack = new TextObject("ACK");
-						this.sendObjectDirectly(IPAddress, ack);
-						Log.me(this, "File saved ");
+						if(FSC.saveNewFile(fileName, uuid, chunk, data.getBytes()))
+						{
+							TextObject ack = new TextObject("ACK");
+							this.sendObjectDirectly(IPAddress, ack);
+							Log.me(this, "File saved ");
+
+						}
+						else
+						{
+							TextObject fail = new TextObject("FAIL");
+							this.sendObjectDirectly(IPAddress, fail);
+							Log.me(this, "Error while saving the file");
+						}
 					}
-					
+
 
 				}
 			}
@@ -212,7 +221,7 @@ public class NetworkController {
 			{
 				//TODO abort
 			}
-			
+
 		}
 		Log.me(this, "file saved uuid: " + uuid.toString());
 
@@ -220,7 +229,7 @@ public class NetworkController {
 
 		return false;
 	}
-	
+
 	/**
 	 * This function will receive a certain amount of objects over TCP in the P2P port
 	 * @param numObjects
@@ -351,36 +360,36 @@ public class NetworkController {
 		}
 	}
 	public boolean sendObjectDirectly(InetAddress IPAddress, Object obj)
-    {
-            Socket socket = null;
-            try
-            {
-                    socket = new Socket(IPAddress, RDFSProperties.getP2PPort());
-                    OutputStream oStream = socket.getOutputStream();
-                    ObjectOutputStream ooStream = new ObjectOutputStream(oStream);
-                    ooStream.writeObject(obj);
-                    ooStream.close();
-                    return true;
-            }
-            catch (UnknownHostException e)
-            {
-                    Log.me(this, "Failed to receive Object from host: " + IPAddress  + " - " + e.toString());
-                    return false;
-            }
-            catch (IOException e)
-            {
-                    Log.me(this, "Failed to receive Object  because of IO from host: " + IPAddress  + " - " + e.toString());
-                    return false;
-            }
-            finally
-            {
-                    try {
-                            socket.close();
-                    } catch (IOException e) {
-                            
-                    }
-            }
-    }
+	{
+		Socket socket = null;
+		try
+		{
+			socket = new Socket(IPAddress, RDFSProperties.getP2PPort());
+			OutputStream oStream = socket.getOutputStream();
+			ObjectOutputStream ooStream = new ObjectOutputStream(oStream);
+			ooStream.writeObject(obj);
+			ooStream.close();
+			return true;
+		}
+		catch (UnknownHostException e)
+		{
+			Log.me(this, "Failed to receive Object from host: " + IPAddress  + " - " + e.toString());
+			return false;
+		}
+		catch (IOException e)
+		{
+			Log.me(this, "Failed to receive Object  because of IO from host: " + IPAddress  + " - " + e.toString());
+			return false;
+		}
+		finally
+		{
+			try {
+				socket.close();
+			} catch (IOException e) {
+
+			}
+		}
+	}
 	public boolean sendUDPMessage(byte[] buffer)
 	{
 		InetAddress ia;
@@ -411,7 +420,7 @@ public class NetworkController {
 		DatagramPacket dp = UDPMessages.get(0);
 		UDPMessages.remove(0);
 		return dp;
-		
+
 	}
 
 }
