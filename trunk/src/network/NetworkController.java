@@ -11,6 +11,7 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.UUID;
 import java.util.zip.CRC32;
 import java.util.zip.Checksum;
@@ -25,6 +26,10 @@ import nodeDirectory.Node;
 import network.entities.*;
 
 
+/**
+ * @author vdelgado
+ *
+ */
 public class NetworkController {
 
 	FileSystemController FSC = FileSystemController.getInstance("");
@@ -104,12 +109,13 @@ public class NetworkController {
 				UUID uuid = UUID.fromString(split[1]);
 				//if(!uuid.equals(rdfs.uuid))
 				//{
-					Node n = new Node(uuid);
-					this.DC.getNodeDirectory().addNode(n);
+				Node n = new Node(uuid);
+				this.DC.getNodeDirectory().addNode(n);
 				//}
 			}
 			//this is the request to save a file
 			//format: pSave@sizeBytes@UUID@fileName@chunk
+			//TODO vic: change flow
 			else if(split[0].equals("pSave"))
 			{
 
@@ -126,7 +132,7 @@ public class NetworkController {
 
 					//Send Response format: rSave@UUID  (i can save the file)
 					TextObject to = new TextObject("rSaveMe@" + uuid);
-					this.sendObject(to);
+					//this.sendObject(to);
 
 					Object received = this.receiveObject(IPAddress);
 
@@ -151,39 +157,78 @@ public class NetworkController {
 			{
 
 			}
-
-
 		}
 		catch(Exception e)
 		{
 			Log.me(this, "Failed to Process Packet - " + e.toString());
 		}
 	}
-	public synchronized boolean saveFile(int sizeBytes, UUID uuid, String fileName, int chunk)
+	public synchronized boolean saveFile(int sizeBytes, UUID uuid, String fileName, int chunk, int numNodes)
 	{
 		//format: pSave@sizeBytes@UUID@fileName@chunk
 		String str = "pSave@"+ sizeBytes + "@" + rdfs.uuid + "@" + fileName + "@" + chunk;
 		byte[] buffer = str.getBytes();
 		this.sendUDPMessage(buffer);
-		
+
 		//Receive Response format: rSave@UUID  (i can save the file)
-		TextObject to = new TextObject("rSaveMe@" + uuid);
-		this.sendObject(to);
-		this.receiveObject();
-		
-		
+		//TextObject to = new TextObject("rSaveMe@" + uuid);
+		//this.sendObject(to);
+
+		//TODO the parameter in the next function should be the number of nodes required to save the file
+		ArrayList<Object[]> list = this.receiveObject(numNodes);
+		if(list == null || list.size() < numNodes)
+		{
+			return false;
+		}
+		for(int i = 0; i< numNodes; i++ )
+		{
+			Object[] obj = list.get(i);
+			if(obj[1] instanceof TextObject)
+			{
+				TextObject text = (TextObject)obj[1];
+				if(text.getText().equals(("rSaveMe@" + uuid.toString())))
+				{
+					Log.me(this, "rSave for uuid: " + uuid.toString());
+				}
+			}
+		}
+		//send file to hosts
+		for(int i = 0; i< numNodes; i++ )
+		{
+			
+		}
+
+
+
 		return false;
 	}
-	private Object receiveObject()
+	
+	/**
+	 * This function will receive a certain amount of objects over TCP in the P2P port
+	 * @param numObjects
+	 * @return
+	 */
+	public ArrayList<Object[]> receiveObject(int numObjects)
 	{
-		ServerSocket serversocket;
+		ArrayList<Object[]> list = new ArrayList<Object[]>();
+		ServerSocket serversocket = null;
 		try
 		{
 			serversocket = new ServerSocket(RDFSProperties.getP2PPort());
-			Socket socket = serversocket.accept();
-			InputStream iStream = socket.getInputStream();
-			ObjectInputStream oiStream = new ObjectInputStream(iStream);
-			return oiStream.readObject();
+			for(int i = 0; i < numObjects;i++)
+			{
+				Socket socket = serversocket.accept();
+				socket.setSoTimeout(5000);
+				InputStream iStream = socket.getInputStream();
+				ObjectInputStream oiStream = new ObjectInputStream(iStream);
+				Object[] tmp = new Object[2];
+				tmp[0] = socket.getInetAddress();
+				tmp[1] = oiStream.readObject();
+				list.add( tmp );
+				socket.close();
+			}
+			serversocket.close();
+			return list;
 		}
 		catch (UnknownHostException e)
 		{
@@ -200,8 +245,15 @@ public class NetworkController {
 			Log.me(this, "Failed to receive Object  because of ClassNotFound from host: - " + e.toString());
 			return null;
 		}
+		finally
+		{
+			try {
+				serversocket.close();
+			} catch (IOException e) {
+			}
+		}
 	}
-	private Object receiveObject(InetAddress IPAddress)
+	public Object receiveObject(InetAddress IPAddress)
 	{
 		Socket socket;
 		try
@@ -227,7 +279,38 @@ public class NetworkController {
 			return null;
 		}
 	}
-	private boolean sendObject(Object obj)
+	public boolean sendObject(InetAddress IPAddress, Object obj)
+	{
+		Socket socket = null;
+		try
+		{
+			socket = new Socket(IPAddress, RDFSProperties.getP2PPort());
+			OutputStream oStream = socket.getOutputStream();
+			ObjectOutputStream ooStream = new ObjectOutputStream(oStream);
+			ooStream.writeObject(obj);
+			ooStream.close();
+			return true;
+		}
+		catch (UnknownHostException e)
+		{
+			Log.me(this, "Failed to receive Object from host: " + IPAddress  + " - " + e.toString());
+			return false;
+		}
+		catch (IOException e)
+		{
+			Log.me(this, "Failed to receive Object  because of IO from host: " + IPAddress  + " - " + e.toString());
+			return false;
+		}
+		finally
+		{
+			try {
+				socket.close();
+			} catch (IOException e) {
+				
+			}
+		}
+	}
+	public boolean sendObjectByPetition(Object obj)
 	{
 		ServerSocket serverSocket = null;
 		try
@@ -237,6 +320,11 @@ public class NetworkController {
 			if (serverSocket.isBound())
 			{
 				Log.me(this, "Sendig Object");
+			}
+			else
+			{
+				Log.me(this, "Couldnt bound socket on sendObjectByPetition");
+				return false;
 			}
 			Socket sock = serverSocket.accept();
 			OutputStream oStream = sock.getOutputStream();

@@ -1,5 +1,7 @@
 package common;
 
+import static org.junit.Assert.assertTrue;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.DataInputStream;
@@ -8,9 +10,12 @@ import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.UUID;
 
 import network.NetworkController;
+import network.entities.TextObject;
 
 
 
@@ -38,6 +43,7 @@ public class rdfs {
 		
 		NetworkController nc = NetworkController.getInstance();
 		
+		/*
 		Thread bl = nc.startListener();
 		Thread iat = nc.startImAliveThread();
 		try {
@@ -50,7 +56,55 @@ public class rdfs {
 		} catch (InterruptedException e) {
 			Log.me(null, "Error on joining imAliveThread", Log.Priority.ERROR);
 		}
+		*/
 		
+		
+		//tester
+		/*
+		try {
+			InetAddress ip = InetAddress.getByName("192.168.2.5");
+			TextObject sendObject = new TextObject("hi");
+			nc.sendObject(ip, sendObject);
+		} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+		//tester2
+		/*
+		Object obj;
+		try {
+			obj = nc.receiveObject(InetAddress.getLocalHost());
+			if(obj != null)
+			{
+				System.out.println("cool! received something");
+			}
+			else
+			{
+				System.out.println("received null");
+			}
+			if(obj instanceof TextObject)
+			{
+				System.out.println("cool! is the instance");
+			}
+			else
+			{
+				System.out.println("grrr1");
+			}
+			if(((TextObject)obj).getText().equals("hi"))
+			{
+				System.out.println("cool! is the object");
+			}
+			else
+			{
+				System.out.println("grrr2");
+			}
+		} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		*/
 		
 	}
 	
