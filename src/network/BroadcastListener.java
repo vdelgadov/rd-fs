@@ -5,11 +5,15 @@ import java.io.InterruptedIOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.FutureTask;
 /*import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.Callable;
-*/
+ */
 import common.Log;
 import common.RDFSProperties;
 
@@ -31,35 +35,16 @@ public class BroadcastListener implements Runnable {
 
 			final MulticastSocket ms = new MulticastSocket(RDFSProperties.getBroadcastPort());
 			ms.joinGroup(ia);
-			//ExecutorService executor = Executors.newFixedThreadPool(20);
+			ExecutorService executor = Executors.newFixedThreadPool(20);
 			while (nc.runListener) {
+				byte[] buffer = new byte[65535];
+				DatagramPacket dp = new DatagramPacket(buffer, buffer.length);
+				ms.receive(dp);
+				executor.execute( new Handler( dp ) );
 
 
-					/*FutureTask<String> future = 
-						new FutureTask<String>(new Callable<String>() { 
-							public String call() {
-								try {
-									byte[] buffer = new byte[65535];
-									DatagramPacket dp = new DatagramPacket(buffer, buffer.length);
-									//ms.setSoTimeout(5000);
-									ms.receive(dp);
-									Log.me(this, "Received Packet: " + new String(dp.getData(),0,dp.getLength()));
-									nc.processPacket(dp);
-								}
-								catch(InterruptedIOException e)
-								{
-								}
-								catch(Exception e)
-								{
-									ms.close();
-									Log.me(this,"Error while listening for broadcasts" + e.getMessage());
-								}
-							}});
-							
-					executor.execute(future);
-					*/
-						
-							try {
+
+				/*		try {
 								byte[] buffer = new byte[65535];
 								DatagramPacket dp = new DatagramPacket(buffer, buffer.length);
 								ms.setSoTimeout(5000);
@@ -79,7 +64,7 @@ public class BroadcastListener implements Runnable {
 								ms.close();
 								Log.me(this,"Error while listening for broadcasts" + e.getMessage());
 							}
-
+				 */
 
 			}
 
@@ -89,5 +74,23 @@ public class BroadcastListener implements Runnable {
 		}
 
 	}
+	private class Handler implements Runnable {
+		private final DatagramPacket dp;   
+		public Handler(DatagramPacket dp) { this.dp = dp; }
+		public void run() {
+			try
+			{
+				if (!dp.getAddress().equals(InetAddress.getLocalHost()))
+				{
+					Log.me(this, "Received Packet: " + new String(dp.getData(),0,dp.getLength()));
+					nc.processPacket(dp);
+				}
 
+			}
+			catch(Exception e)
+			{
+				Log.me(this,"Error while getting Datagram Packet" + e.getMessage());
+			}
+		}
+	}
 }

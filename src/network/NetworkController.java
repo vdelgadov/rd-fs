@@ -147,7 +147,7 @@ public class NetworkController {
 						BytesObject data = (BytesObject)obj[1];
 						if(FSC.saveNewFile(fileName, uuid, chunk, data.getBytes()))
 						{
-							TextObject ack = new TextObject("ACK");
+							TextObject ack = new TextObject("ACK@" + uuid);
 							this.sendObjectDirectly(IPAddress, ack);
 							Log.me(this, "File saved ");
 
@@ -177,6 +177,7 @@ public class NetworkController {
 				//Send Response format: rDelete@UUID  (i can save the file)
 				if(FSC.removeFile(fileName, true))
 				{
+					Thread.sleep(200);
 					TextObject to = new TextObject("rSaveMe@" + uuid + "@" + fileName);
 					sendObjectDirectly(IPAddress, to);
 				}
@@ -308,7 +309,7 @@ public class NetworkController {
 			for(int i = 0; i < numObjects;i++)
 			{
 				socket = serversocket.accept();
-				socket.setSoTimeout(5000);
+				socket.setSoTimeout(1000);
 				InputStream iStream = socket.getInputStream();
 				ObjectInputStream oiStream = new ObjectInputStream(iStream);
 				Object[] tmp = new Object[2];
@@ -355,6 +356,7 @@ public class NetworkController {
 		try
 		{
 			socket = new Socket(IPAddress, RDFSProperties.getP2PPort());
+			socket.setSoTimeout(1000);
 			InputStream iStream = socket.getInputStream();
 			ObjectInputStream oiStream = new ObjectInputStream(iStream);
 			return oiStream.readObject();
@@ -392,6 +394,7 @@ public class NetworkController {
 				return false;
 			}
 			Socket sock = serverSocket.accept();
+			sock.setSoTimeout(1000);
 			OutputStream oStream = sock.getOutputStream();
 			ObjectOutputStream ooStream = new ObjectOutputStream(oStream);
 			ooStream.writeObject(obj);
@@ -427,6 +430,7 @@ public class NetworkController {
 		try
 		{
 			socket = new Socket(IPAddress, RDFSProperties.getP2PPort());
+			socket.setSoTimeout(1000);
 			OutputStream oStream = socket.getOutputStream();
 			ObjectOutputStream ooStream = new ObjectOutputStream(oStream);
 			ooStream.writeObject(obj);
