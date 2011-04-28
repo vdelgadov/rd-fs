@@ -219,6 +219,7 @@ public class NetworkController {
 				BytesObject file = new BytesObject(FSC.getFileData(fileName, 0, 65535));
 				if(sendObjectDirectly(IPAddress, file))
 				{					
+					this.receivedMessages.remove(message);
 					Log.me(this, "File send succesfully");
 				}
 				
