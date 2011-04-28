@@ -163,6 +163,25 @@ public class NetworkController {
 
 				}
 			}
+			//petition to delete a file
+			else if(split[0].equals("pDelete"))
+			{
+				String[] deleteSplit = split[1].split("@", 2);
+
+				UUID uuid = UUID.fromString(deleteSplit[0]);
+				String fileName = deleteSplit[1];
+
+
+				InetAddress IPAddress = dp.getAddress();
+
+				//Send Response format: rDelete@UUID  (i can save the file)
+				if(FSC.removeFile(fileName, true))
+				{
+					TextObject to = new TextObject("rSaveMe@" + uuid + "@" + fileName);
+					sendObjectDirectly(IPAddress, to);
+				}
+
+			}
 			//Petition to send file
 			else if(split[0].equals("get"))
 			{
@@ -213,8 +232,11 @@ public class NetworkController {
 				//TODO abort
 			}
 			ArrayList<Object[]> ack= this.receiveObjectsByPetition(1);
-			if(  (ack.get(0)[1] instanceof TextObject) && ( ((TextObject) ack.get(0)[1]).getText().equals("ACK") )  )
+			if(  (ack.get(0)[1] instanceof TextObject) && ( ((TextObject) ack.get(0)[1]).getText().startsWith("ACK") )  )
 			{
+				String[] split = ((TextObject)ack.get(0)[1]).getText().split("@", 2);
+				UUID node = UUID.fromString( split[1] );
+				//TODO pablo: add the file entry to directory (was saved by that node)
 				return true;
 			}
 			else
@@ -229,7 +251,47 @@ public class NetworkController {
 
 		return false;
 	}
+	//TODO how to eliminate a file by its uuid? (not local)
 
+	/**
+	 * This function will send a deleteFile in al nodes, returning the number of nodes that deleted the file
+	 * @param sizeBytes
+	 * @param uuid
+	 * @param fileName
+	 * @return
+	 */
+	public synchronized int deleteFile( UUID uuid, String fileName, int numNodes)
+	{
+		//format: pDelete@UUID@fileName@chunk
+		String str = "pDelete@" + uuid + "@" + fileName;
+		FSC.removeFile(fileName, true);
+		byte[] buffer = str.getBytes();
+		this.sendUDPMessage(buffer);
+
+		//TODO the parameter in the next function should be the number of nodes required to delete the file
+		ArrayList<Object[]> list = this.receiveObjectsByPetition(numNodes);
+		if(list == null)
+		{
+			return 0;
+		}
+		int numResponses = 0;
+		for(int i = 0; i< numNodes; i++ )
+		{
+			Object[] obj = list.get(i);
+			if(obj[1] instanceof TextObject)
+			{
+				TextObject text = (TextObject)obj[1];
+				if(text.getText().equals("rSaveMe@" + uuid + "@" + fileName))
+				{
+					numResponses++;
+					Log.me(this, "rDelete for uuid: " + uuid.toString());
+				}
+			}
+		}
+		Log.me(this, "rDelete by "+ numNodes+" nodes uuid: " + uuid.toString());
+		return numResponses;
+
+	}
 	/**
 	 * This function will receive a certain amount of objects over TCP in the P2P port
 	 * @param numObjects
