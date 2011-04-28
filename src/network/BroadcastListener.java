@@ -40,6 +40,7 @@ public class BroadcastListener implements Runnable {
 				byte[] buffer = new byte[65535];
 				DatagramPacket dp = new DatagramPacket(buffer, buffer.length);
 				ms.receive(dp);
+				ms.setTimeToLive(1);
 				executor.execute( new Handler( dp ) );
 
 

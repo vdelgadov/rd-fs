@@ -35,6 +35,8 @@ public class NetworkController {
 	FileSystemController FSC = FileSystemController.getInstance("./tmp/");
 	DirectoryController DC = new DirectoryController();
 	private ArrayList<DatagramPacket> UDPMessages = new ArrayList<DatagramPacket>();
+	private ArrayList<String> receivedMessages = new ArrayList<String>();
+
 
 	static NetworkController nc;
 
@@ -102,6 +104,15 @@ public class NetworkController {
 			String message = new String(dp.getData(),0,dp.getLength());
 			String[] split = message.split("@", 2);
 			Log.me(this, "Proscessing packet: " + message);
+			if(this.receivedMessages.contains(message))
+			{
+				Log.me(this, "Duplicated message");
+				return;
+			}
+			else
+			{
+				this.receivedMessages.add(message);
+			}
 
 			//Im alive packet format: imAlive@UUID
 			if(split[0].equals("imAlive"))
@@ -184,10 +195,38 @@ public class NetworkController {
 
 			}
 			//Petition to send file
-			else if(split[0].equals("get"))
+			else if(split[0].equals("pGet"))
 			{
+				String[] saveSplit = split[1].split("@", 3);
+
+				UUID uuid = UUID.fromString(saveSplit[0]);
+				String fileName = saveSplit[1];
+				int chunk = Integer.parseInt(saveSplit[2]);
+
+
+				InetAddress IPAddress = dp.getAddress();
+
+				//Send Response format: rSave@UUID  (i can save the file)
+				TextObject to = new TextObject("rGetMe@" + uuid);
+				sendObjectDirectly(IPAddress, to);
+				
+				byte[] bytes = FSC.getFileData(fileName, 0, 65535);
+				if(bytes == null)
+				{
+					this.receivedMessages.remove(message);
+					return;
+				}
+				BytesObject file = new BytesObject(FSC.getFileData(fileName, 0, 65535));
+				if(sendObjectDirectly(IPAddress, file))
+				{					
+					Log.me(this, "File send succesfully");
+				}
+				
+				
+
 
 			}
+
 		}
 		catch(Exception e)
 		{
@@ -292,6 +331,45 @@ public class NetworkController {
 		Log.me(this, "rDelete by "+ numNodes+" nodes uuid: " + uuid.toString());
 		return numResponses;
 
+	}
+	public synchronized Object getFile(UUID uuid, String fileName, int chunk)
+	{
+		//format: pSave@sizeBytes@UUID@fileName@chunk
+		String str = "pGet@" + uuid + "@" + fileName + "@" + chunk;
+		byte[] buffer = str.getBytes();
+		this.sendUDPMessage(buffer);
+
+		//Receive Response format: rSave@UUID  (i can save the file)
+		//TextObject to = new TextObject("rSaveMe@" + uuid);
+		//this.sendObject(to);
+
+		//TODO the parameter in the next function should be the number of nodes required to save the file
+		ArrayList<Object[]> list = this.receiveObjectsByPetition(1);
+		if(list == null || list.size() < 1)
+		{
+			return null;
+		}
+		for(int i = 0; i< 1; i++ )
+		{
+			Object[] obj = list.get(i);
+			if(obj[1] instanceof TextObject)
+			{
+				TextObject text = (TextObject)obj[1];
+				if(text.getText().equals(("rGetMe@" + uuid.toString())))
+				{
+					Log.me(this, "rGet for uuid: " + uuid.toString());
+				}
+			}
+		}
+		//get file
+
+		ArrayList<Object[]> ack= this.receiveObjectsByPetition(1);
+		if(  (ack.get(0)[1] instanceof BytesObject)  )
+		{
+			return ack.get(0)[1];
+		}
+
+		return null;
 	}
 	/**
 	 * This function will receive a certain amount of objects over TCP in the P2P port
