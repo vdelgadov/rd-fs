@@ -6,6 +6,7 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
+import java.io.File;
 
 import javax.swing.*;
 
@@ -46,9 +47,11 @@ public class rdfsGui extends javax.swing.JFrame  {
 	private JMenuItem connectUserMenuItem;
 	private JMenuItem disconnectMenuItem;
 	private JMenu connectionMenu;
+	private JButton deleteFileButton;
 	private JLabel statusLabel;
 	private JMenuBar jMenuBar1;
 	private JScrollPane scrollPane;
+	private JFileChooser fileChooser;
 	
 	private rdfsController rdfsControl;
 
@@ -80,6 +83,8 @@ public class rdfsGui extends javax.swing.JFrame  {
 	private void initGUI() {
 		try {
 			{
+				fileChooser = new JFileChooser();
+				
 				jPanel1 = new JPanel();
 				getContentPane().add(jPanel1, BorderLayout.CENTER);
 				{
@@ -94,16 +99,15 @@ public class rdfsGui extends javax.swing.JFrame  {
 				}
 				{
 					ListModel fileListModel = 
-						new DefaultComboBoxModel(
-								new String[] { 
-										
-										});
+						new DefaultListModel();
 					fileList = new JList();
 					scrollPane = new JScrollPane(fileList);
 					jPanel1.add(scrollPane);
 					scrollPane.setPreferredSize(new java.awt.Dimension(376, 250));
 					fileList.setModel(fileListModel);
 					fileList.setAutoscrolls(true);
+					ListSelectionModel listSelModel = fileList.getSelectionModel();
+					listSelModel.addListSelectionListener(rdfsControl);
 				}
 				{
 					uploadFileButton = new JButton();
@@ -111,6 +115,8 @@ public class rdfsGui extends javax.swing.JFrame  {
 					uploadFileButton.setLayout(uploadFileButtonLayout);
 					jPanel1.add(uploadFileButton);
 					uploadFileButton.setText("Upload File");
+					uploadFileButton.addActionListener(rdfsControl);
+					uploadFileButton.setActionCommand(rdfsController.UPLOAD_BUTTON_ACTION_COMMAND);
 				}
 				{
 					downloadFileButton = new JButton();
@@ -118,6 +124,18 @@ public class rdfsGui extends javax.swing.JFrame  {
 					downloadFileButton.setLayout(downloadFileButtonLayout);
 					jPanel1.add(downloadFileButton);
 					downloadFileButton.setText("Download File");
+					downloadFileButton.addActionListener(rdfsControl);
+					downloadFileButton.setActionCommand(rdfsController.DOWNLOAD_BUTTON_ACTION_COMMAND);
+				}
+				{
+					deleteFileButton = new JButton();
+					FlowLayout deleteFileButtonLayout = new FlowLayout();
+					deleteFileButton.setLayout(deleteFileButtonLayout);
+					jPanel1.add(deleteFileButton);
+					deleteFileButton.setText("Delete File");
+					deleteFileButton.addActionListener(rdfsControl);
+					deleteFileButton.setActionCommand(rdfsController.DELETE_BUTTON_ACTION_COMMAND);
+					
 				}
 			}
 			this.setSize(419, 385);
@@ -215,12 +233,45 @@ public class rdfsGui extends javax.swing.JFrame  {
 		scrollPane.setEnabled(enabled);
 	}
 	
-	private void toggleButtons(boolean enabled)
+	public void toggleButtons(boolean enabled)
 	{
 		uploadFileButton.setEnabled(enabled);
 		downloadFileButton.setEnabled(enabled);
+		deleteFileButton.setEnabled(enabled);
+	}
+	
+	public void toggleUploadButton(boolean enabled)
+	{
+		uploadFileButton.setEnabled(enabled);
+	}
+	
+	public int showOpenDialog()
+	{
+		fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+		return fileChooser.showOpenDialog(this);
+	}
+	
+	public File getSelectedFile()
+	{
+		return fileChooser.getSelectedFile();
+	}
+	
+	public int showSaveDialog()
+	{
+		fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+		return fileChooser.showSaveDialog(this);
+	}
+	
+	public JList getFileList()
+	{
+		return fileList;
 	}
 
-	
+	@Override
+	public void dispose()
+	{
+		rdfsControl.stopAll();
+		super.dispose();
+	}
 
 }

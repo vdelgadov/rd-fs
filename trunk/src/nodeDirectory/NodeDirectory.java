@@ -2,6 +2,7 @@ package nodeDirectory;
 
 import java.util.Date;
 import java.util.LinkedList;
+import java.util.UUID;
 
 import common.Log;
 import fileSystem.FileTable;
@@ -48,6 +49,20 @@ public class NodeDirectory {
 			}
 		}
 		Log.me(this, "Node not found to be removed: "+ node.uuid.toString());
+	}
+	
+	public synchronized UUID getUuidFromFileName(String filename)
+	{
+		UUID fileUuid = null;
+		for (Node n : nodes)
+		{
+			fileUuid = n.getFileTable().lookupGlobalIdByName(filename);
+			if (fileUuid != null)
+			{
+				return fileUuid;
+			}
+		}
+		return fileUuid;
 	}
 
 	public synchronized void nodeAlive(Node node)

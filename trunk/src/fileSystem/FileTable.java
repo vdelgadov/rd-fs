@@ -90,6 +90,26 @@ public class FileTable implements Serializable {
 	}
 	
 	/**
+	 * Looks for a file in the table, regardless of the chunk sequence.
+	 * 
+	 * @param filename of the file to be looked for
+	 * @return local UUID assigned to that file, null if not found
+	 */
+	public UUID lookupGlobalIdByName(String filename)
+	{
+		Log.me(this, "Looking up for file: "+ filename);
+		for (Entry entry : entries) 
+		{
+			if (entry.getFilename().equals(filename))
+			{
+				return entry.getGlobalId();
+			}
+		}
+		Log.me(this, "File could not be found: "+ filename,Log.Priority.WARNING);
+		return null;
+	}
+	
+	/**
 	 * Looks for a file and chunk sequence in the entries table.
 	 * 
 	 * @param filename of the file to be looked for
