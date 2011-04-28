@@ -143,7 +143,11 @@ public class NetworkController {
 
 					//Send Response format: rSave@UUID  (i can save the file)
 					TextObject to = new TextObject("rSaveMe@" + uuid);
-					sendObjectDirectly(IPAddress, to);
+					if (!sendObjectDirectly(IPAddress, to))
+					{
+						Log.me(this, "Error while saving the file");
+						return;
+					}
 
 					ArrayList<Object[]> list = this.receiveObjectsByPetition(1);
 					if(list == null || list.size() != 1)
@@ -213,13 +217,13 @@ public class NetworkController {
 				byte[] bytes = FSC.getFileData(fileName, 0, 65535);
 				if(bytes == null)
 				{
-					this.receivedMessages.remove(message);
+					//this.receivedMessages.remove(message);
 					return;
 				}
 				BytesObject file = new BytesObject(FSC.getFileData(fileName, 0, 65535));
 				if(sendObjectDirectly(IPAddress, file))
 				{					
-					this.receivedMessages.remove(message);
+					//this.receivedMessages.remove(message);
 					Log.me(this, "File send succesfully");
 				}
 				
@@ -385,6 +389,7 @@ public class NetworkController {
 		try
 		{
 			serversocket = new ServerSocket(RDFSProperties.getP2PPort());
+			serversocket.setSoTimeout(1000);
 			for(int i = 0; i < numObjects;i++)
 			{
 				socket = serversocket.accept();
@@ -518,12 +523,12 @@ public class NetworkController {
 		}
 		catch (UnknownHostException e)
 		{
-			Log.me(this, "Failed to receive Object from host: " + IPAddress  + " - " + e.toString());
+			Log.me(this, "Failed to send Object from host: " + IPAddress  + " - " + e.toString());
 			return false;
 		}
 		catch (IOException e)
 		{
-			Log.me(this, "Failed to receive Object  because of IO from host: " + IPAddress  + " - " + e.toString());
+			Log.me(this, "Failed to send Object  because of IO from host: " + IPAddress  + " - " + e.toString());
 			return false;
 		}
 		finally
