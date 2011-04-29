@@ -73,7 +73,7 @@ public class rdfsGui extends javax.swing.JFrame  {
 		super();
 		this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		this.setTitle("Redundant Distributed File System");
-		rdfsControl = new rdfsController(this);
+		rdfsControl = rdfsController.createInstance(this);
 		
 		initGUI();		
 		

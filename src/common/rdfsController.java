@@ -15,9 +15,12 @@ import java.util.UUID;
 
 import javax.swing.DefaultListModel;
 import javax.swing.JFileChooser;
+import javax.swing.JList;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+
+import fileSystem.FileSystemController;
 
 import network.NetworkController;
 import network.entities.BytesObject;
@@ -27,6 +30,7 @@ public class rdfsController implements ActionListener, ListSelectionListener {
 
 	private rdfsGui gui;
 	private NetworkController nc;
+	private FileSystemController fsc;
 	public static UUID uuid;
 	
 	private String fileSelected = null;
@@ -43,11 +47,24 @@ public class rdfsController implements ActionListener, ListSelectionListener {
 	
 	public static final String UUID_FILENAME = "uuid"; 
 	
-	public rdfsController(rdfsGui gui)
+	public static rdfsController instance;
+	
+	private rdfsController(rdfsGui gui)
 	{
 		Log.init(Log.Priority.DEBUG);
 		dc = DirectoryController.getInstance();
+		fsc = FileSystemController.getInstance("./tmp/");
 		this.gui = gui;
+	}
+	
+	public static rdfsController getInstance()
+	{
+		return instance;
+	}
+	
+	public static rdfsController createInstance(rdfsGui gui)
+	{
+		return instance = new rdfsController(gui);
 	}
 	
 	public void setGuiDefaults()
@@ -106,9 +123,7 @@ public class rdfsController implements ActionListener, ListSelectionListener {
 	            gui.changeStatus("Uploading file to system.");
 	            boolean saved = nc.saveFile(data.length, fileUuid, file.getName(), 0, 1, obj);
 	            if (saved)
-	            {
-	            	((DefaultListModel)gui.getFileList().getModel()).addElement(file.getName());
-	            	
+	            {	            	
 	            	gui.changeStatus("Uploaded completed succesfully");
 	            }
 	            else
@@ -178,8 +193,11 @@ public class rdfsController implements ActionListener, ListSelectionListener {
 	
 	private void disconnect()
 	{
-		nc.stopImAliveThread();
-		nc.stopListener();
+		if (nc != null)
+		{
+			nc.stopImAliveThread();
+			nc.stopListener();
+		}
 		gui.disconnect();
 		gui.deactivateAll();
 	}
@@ -331,4 +349,14 @@ public class rdfsController implements ActionListener, ListSelectionListener {
 	{
 		disconnect();
 	}
+
+	public void updateList() 
+	{
+		((DefaultListModel)gui.getFileList().getModel()).removeAllElements();
+		for (String filename : dc.getNodeDirectory().getFileNames())
+		{
+			((DefaultListModel)gui.getFileList().getModel()).addElement(filename);
+		}
+	}
+	
 }

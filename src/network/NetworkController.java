@@ -19,6 +19,7 @@ import java.util.zip.Checksum;
 import common.Log;
 import common.RDFSProperties;
 import common.rdfs;
+import common.rdfsController;
 import fileSystem.FileSystemController;
 import fileSystem.FileTable;
 
@@ -164,19 +165,41 @@ public class NetworkController {
 					if(obj[1] instanceof BytesObject)
 					{
 						BytesObject data = (BytesObject)obj[1];
-						if(FSC.saveNewFile(fileName, uuid, chunk, data.getBytes()))
+						if (FSC.hasFile(fileName))
 						{
-							TextObject ack = new TextObject("ACK@" + uuid);
-							this.sendObjectDirectly(IPAddress, ack);
-							Log.me(this, "File saved ");
+							if(FSC.saveNewFile(fileName, uuid, chunk, data.getBytes()))
+							{
+								TextObject ack = new TextObject("ACK@" + uuid);
+								this.sendObjectDirectly(IPAddress, ack);
+								rdfsController.getInstance().updateList();
+								Log.me(this, "File saved ");
 
+							}
+							else
+							{
+								TextObject fail = new TextObject("FAIL");
+								this.sendObjectDirectly(IPAddress, fail);
+								Log.me(this, "Error while saving the file");
+							}
 						}
 						else
 						{
-							TextObject fail = new TextObject("FAIL");
-							this.sendObjectDirectly(IPAddress, fail);
-							Log.me(this, "Error while saving the file");
+							if(FSC.saveUpdatedFile(fileName, uuid, chunk, data.getBytes()))
+							{
+								TextObject ack = new TextObject("ACK@" + uuid);
+								this.sendObjectDirectly(IPAddress, ack);
+								rdfsController.getInstance().updateList();
+								Log.me(this, "File saved ");
+
+							}
+							else
+							{
+								TextObject fail = new TextObject("FAIL");
+								this.sendObjectDirectly(IPAddress, fail);
+								Log.me(this, "Error while saving the file");
+							}
 						}
+						
 					}
 
 
