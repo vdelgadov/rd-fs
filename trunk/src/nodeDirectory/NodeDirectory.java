@@ -1,5 +1,6 @@
 package nodeDirectory;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.UUID;
@@ -63,6 +64,27 @@ public class NodeDirectory {
 			}
 		}
 		return fileUuid;
+	}
+	
+	public synchronized String[] getFileNames()
+	{
+		ArrayList<String> fileNames = new ArrayList<String>();
+		String[] fileNamesArray;
+		for (Node n : nodes)
+		{
+			for (String fname : n.ft.getFileNames())
+			{
+				if (!fileNames.contains(fname))
+				{
+					fileNames.add(fname);
+				}
+			}
+			
+		}
+		fileNamesArray = new String[fileNames.size()];
+		for(int i = 0;i < fileNamesArray.length;i++)
+			fileNamesArray[i] = fileNames.get(i);
+		return fileNamesArray;
 	}
 
 	public synchronized void nodeAlive(Node node)
