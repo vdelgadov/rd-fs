@@ -101,7 +101,6 @@ public class NodeDirectory {
 				Log.me(this, "Removing node due to inactivity: " + n.uuid.toString());
 			}
 		}
-
 	}
 
 }

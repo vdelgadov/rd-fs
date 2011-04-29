@@ -1,4 +1,5 @@
 package fileSystem;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -493,5 +494,22 @@ public class FileSystemController {
 					Log.me(this, "Couldn't close the file table accesor");
 				}
 		}
+	}
+
+	public String getSerializedFileTable() {
+		
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+     
+        try {
+        	ObjectOutputStream oos = new ObjectOutputStream( baos );
+			oos.writeObject( ft );
+			oos.close();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			Log.me(this, "Error serializing file table");
+		}
+        
+		
+		return new String( baos.toByteArray() );
 	}
 }
