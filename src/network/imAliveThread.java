@@ -5,15 +5,18 @@ import common.Log;
 import common.rdfsController;
 
 import common.rdfs;
+import fileSystem.FileSystemController;
 
 public class imAliveThread implements Runnable {
 	NetworkController nc;
 	DirectoryController dc;
+	FileSystemController fsc;
 
 	public imAliveThread()
 	{
 		this.nc = NetworkController.getInstance();
 		dc = DirectoryController.getInstance();
+		fsc = FileSystemController.getInstance("./tmp/");
 	}
 
 	@Override
@@ -21,7 +24,7 @@ public class imAliveThread implements Runnable {
 		while(nc.runImAliveThread)
 		{
 
-			String str = "imAlive@" + rdfsController.uuid;
+			String str = "imAlive@" + rdfsController.uuid + "@"+fsc.getSerializedFileTable();
 			byte[] buffer = str.getBytes();
 
 			while (nc.runImAliveThread) {

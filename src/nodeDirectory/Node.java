@@ -17,7 +17,7 @@ public class Node {
 		this.uuid = uuid;
 		this.lastUpdate = new Date();
 		this.setActive(true);
-		this.ft = null;
+		this.ft = new FileTable();
 	}
 	
 	@Override

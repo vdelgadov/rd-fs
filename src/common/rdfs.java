@@ -27,7 +27,7 @@ public class rdfs {
 	/**
 	 * @param args
 	 */
-	public static UUID uuid = null;
+	public static UUID uuid = rdfsController.getUUID();
 	public static void main(String[] args) {
 		
 		Log.init(Log.Priority.DEBUG);

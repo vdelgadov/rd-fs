@@ -1,4 +1,6 @@
 package fileSystem;
+import java.io.ByteArrayInputStream;
+import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.UUID;
@@ -311,6 +313,25 @@ public class FileTable implements Serializable {
 		{
 			this.chunkSequence = chunkSequence;
 		}
+	}
+
+
+
+	public static FileTable fromString(String string) {
+		byte [] data = string.getBytes();
+		FileTable o = null;
+		try
+		{
+	        ObjectInputStream ois = new ObjectInputStream( 
+	                                        new ByteArrayInputStream(  data ) );
+	        o  = (FileTable)ois.readObject();
+	        ois.close();
+		}
+		catch(Exception e)
+		{
+			Log.me(null, "Filetable Deserialization error");
+		}
+        return o;
 	}
 	
 }

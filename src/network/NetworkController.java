@@ -20,6 +20,7 @@ import common.Log;
 import common.RDFSProperties;
 import common.rdfs;
 import fileSystem.FileSystemController;
+import fileSystem.FileTable;
 
 import nodeDirectory.DirectoryController;
 import nodeDirectory.Node;
@@ -117,10 +118,13 @@ public class NetworkController {
 			//Im alive packet format: imAlive@UUID
 			if(split[0].equals("imAlive"))
 			{
-				UUID uuid = UUID.fromString(split[1]);
+				String[] aliveSplit = split[1].split("@", 2);
+				UUID uuid = UUID.fromString(aliveSplit[0]);
+				FileTable ft = FileTable.fromString(aliveSplit[1]);
 				//if(!uuid.equals(rdfs.uuid))
 				//{
 				Node n = new Node(uuid);
+				n.setFileTable(ft);
 				this.DC.getNodeDirectory().addNode(n);
 				//}
 			}
