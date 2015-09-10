@@ -1,0 +1,1 @@
+A file system which main objective is redundancy, using multiple heterogeneous -Ubuntu and Windows are supported- nodes.
